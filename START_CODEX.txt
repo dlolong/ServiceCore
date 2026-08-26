@@ -1,0 +1,11 @@
+KARKR — FIRST CODEX SESSION
+
+Open this repository in VS Code/Codex, then paste:
+
+Read AGENTS.md, README.md, docs/PRODUCT_SPEC.md, docs/ARCHITECTURE.md, docs/SCHEMA_NOTES.md, docs/CODEX_MASTER_PROMPT.md, and Phase 00 in docs/CODEX_PHASES.md. Inspect the repository before editing. Implement Phase 00 completely, resolve any dependency/framework compatibility issues using current stable packages, run lint/typecheck/build and any available database checks, report what changed and remaining risks, then STOP. Do not start Phase 01.
+
+After Phase 00 is clean, use this pattern for each phase:
+
+Read AGENTS.md and the relevant architecture/product docs. Implement Phase XX from docs/CODEX_PHASES.md completely. Inspect current code and migrations first; append migrations only; preserve RLS/tenant isolation; run required checks; summarize changes/risks; STOP before the next phase.
+
+Recommended pilot: complete through Phase 06, deploy to a test environment, and onboard 3–5 real auto-care shops before continuing deep features.

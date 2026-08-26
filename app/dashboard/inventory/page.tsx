@@ -1,0 +1,1 @@
+import { SectionPlaceholder } from "@/components/section-placeholder"; export default function Page(){return <SectionPlaceholder title="Inventory" description="Consumables, products, stock movement and low-stock alerts." phase="Phase 07"/>}

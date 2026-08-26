@@ -1,0 +1,1 @@
+import { SectionPlaceholder } from "@/components/section-placeholder"; export default function Page(){return <SectionPlaceholder title="Vehicles" description="Vehicle records, odometer, service history and maintenance context." phase="Phase 02"/>}

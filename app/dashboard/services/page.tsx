@@ -1,0 +1,1 @@
+import { SectionPlaceholder } from "@/components/section-placeholder"; export default function Page(){return <SectionPlaceholder title="Services" description="Your wash, detailing, coating, maintenance and repair catalog." phase="Phase 03"/>}

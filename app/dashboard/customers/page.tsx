@@ -1,0 +1,1 @@
+import { SectionPlaceholder } from "@/components/section-placeholder"; export default function Page(){return <SectionPlaceholder title="Customers" description="Customer profiles, contact details, vehicles and activity." phase="Phase 02"/>}

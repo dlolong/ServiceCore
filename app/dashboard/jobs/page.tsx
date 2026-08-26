@@ -1,0 +1,1 @@
+import { SectionPlaceholder } from "@/components/section-placeholder"; export default function Page(){return <SectionPlaceholder title="Job Orders" description="Services in progress, inspections, technicians, photos and completion." phase="Phase 05"/>}

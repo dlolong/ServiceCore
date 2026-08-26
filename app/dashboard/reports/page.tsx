@@ -1,0 +1,1 @@
+import { SectionPlaceholder } from "@/components/section-placeholder"; export default function Page(){return <SectionPlaceholder title="Reports" description="Sales, jobs, repeat customers, service mix and branch performance." phase="Phase 11"/>}

@@ -1,0 +1,1 @@
+import { SectionPlaceholder } from "@/components/section-placeholder"; export default function Page(){return <SectionPlaceholder title="Appointments & Queue" description="Scheduled bookings, walk-ins, check-ins and branch queue." phase="Phase 04"/>}
