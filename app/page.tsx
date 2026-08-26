@@ -16,7 +16,7 @@ export default function Home() {
         <Link href="/" className="text-2xl font-black tracking-tight">Kar<span className="text-amber-500">KR</span></Link>
         <div className="flex items-center gap-3">
           <Link href="/dashboard" className="rounded-xl px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-zinc-100">Open app</Link>
-          <Link href="/sign-in" className="rounded-xl bg-zinc-950 px-4 py-2 text-sm font-semibold text-white">Sign in</Link>
+          <Link href="/login" className="rounded-xl bg-zinc-950 px-4 py-2 text-sm font-semibold text-white">Sign in</Link>
         </div>
       </header>
 
@@ -26,7 +26,7 @@ export default function Home() {
           <h1 className="max-w-4xl text-5xl font-black tracking-[-0.04em] sm:text-6xl lg:text-7xl">Run your auto-care business from one place.</h1>
           <p className="mt-6 max-w-2xl text-lg leading-8 text-zinc-600">KarKR brings customers, vehicles, bookings, queue, job orders, payments, inventory and service history into one mobile-first platform.</p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <Link href="/sign-up" className="inline-flex items-center gap-2 rounded-2xl bg-zinc-950 px-5 py-3 font-bold text-white">Create your shop <ArrowRight size={18}/></Link>
+            <Link href="/signup" className="inline-flex items-center gap-2 rounded-2xl bg-zinc-950 px-5 py-3 font-bold text-white">Create your shop <ArrowRight size={18}/></Link>
             <a href="#features" className="rounded-2xl border border-zinc-200 bg-white px-5 py-3 font-bold text-zinc-950 hover:bg-zinc-50">Explore features</a>
           </div>
         </div>

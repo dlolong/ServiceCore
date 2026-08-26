@@ -82,7 +82,7 @@ values
   ('d0000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000001', '40000000-0000-4000-8000-000000000001', 'c0000000-0000-4000-8000-000000000001', 'stock_in', 1),
   ('d0000000-0000-4000-8000-000000000002', '20000000-0000-4000-8000-000000000002', '40000000-0000-4000-8000-000000000002', 'c0000000-0000-4000-8000-000000000002', 'stock_in', 1);
 
-select plan(77);
+select plan(86);
 
 -- Data API privilege boundaries.
 select ok(not has_table_privilege('authenticated', 'public.organization_memberships', 'INSERT'), 'authenticated cannot insert memberships directly');
@@ -90,7 +90,8 @@ select ok(not has_table_privilege('authenticated', 'public.organization_membersh
 select ok(not has_table_privilege('authenticated', 'public.organization_memberships', 'DELETE'), 'authenticated cannot delete memberships directly');
 select ok(not has_table_privilege('authenticated', 'public.inventory_movements', 'UPDATE'), 'authenticated cannot rewrite inventory movement history');
 select ok(not has_table_privilege('authenticated', 'public.inventory_movements', 'DELETE'), 'authenticated cannot delete inventory movement history');
-select is(to_regprocedure('public.create_first_organization(text,text,text,text)')::text, null, 'onboarding RPC accepts no browser role argument');
+select is(to_regprocedure('public.create_first_organization(text,text,text)')::text, null, 'legacy onboarding RPC is removed');
+select isnt(to_regprocedure('public.create_first_organization(text,text,text,text,text,text,text,text)')::text, null, 'business onboarding RPC is installed');
 
 select ok(not has_table_privilege('anon', 'public.organization_memberships', 'SELECT'), 'anonymous cannot read memberships');
 select ok(not has_table_privilege('anon', 'public.branches', 'SELECT'), 'anonymous cannot read branches');
@@ -134,6 +135,8 @@ select throws_ok($$insert into public.inventory_items (organization_id, branch_i
 select throws_ok($$insert into public.inventory_movements (organization_id, branch_id, inventory_item_id, movement_type, quantity_delta) values ('20000000-0000-4000-8000-000000000002', '40000000-0000-4000-8000-000000000002', 'c0000000-0000-4000-8000-000000000002', 'stock_in', 1)$$, 'P0001', 'Inventory movement organization mismatch', 'Owner A cannot insert Inventory B movements');
 
 -- Updates and deletes against Organization B are invisible no-ops, never cross-tenant mutations.
+select is_empty($$update public.organizations set name = 'blocked' where id = '20000000-0000-4000-8000-000000000002' returning 1$$, 'Owner A cannot update Organization B');
+select is_empty($$delete from public.organizations where id = '20000000-0000-4000-8000-000000000002' returning 1$$, 'Owner A cannot delete Organization B');
 select is_empty($$update public.branches set phone = 'blocked' where id = '40000000-0000-4000-8000-000000000002' returning 1$$, 'Owner A cannot update Branch B');
 select is_empty($$update public.customers set full_name = 'blocked' where id = '50000000-0000-4000-8000-000000000002' returning 1$$, 'Owner A cannot update Customer B');
 select is_empty($$update public.vehicles set color = 'blocked' where id = '60000000-0000-4000-8000-000000000002' returning 1$$, 'Owner A cannot update Vehicle B');
@@ -164,11 +167,19 @@ select lives_ok($$insert into public.customers (organization_id, full_name) valu
 
 -- First organization onboarding remains atomic and server-owned.
 set local "request.jwt.claims" = '{"sub":"10000000-0000-4000-8000-000000000004","role":"authenticated"}';
-select lives_ok($$select public.create_first_organization('New Shop', 'fixture-new-shop', '+63 900 000 0000')$$, 'authenticated user can atomically onboard');
+select lives_ok($$select public.create_first_organization('New Shop', 'auto_detailing', 'fixture-new-shop', null, '+63 900 000 0000')$$, 'authenticated user can atomically create a business');
 select is((select role::text from public.organization_memberships where user_id = '10000000-0000-4000-8000-000000000004'), 'owner', 'onboarding assigns owner role server-side');
-select is((select count(*) from public.branches where name = 'Main Branch')::bigint, 1::bigint, 'onboarding creates the main branch');
+select is((select count(*) from public.branches where organization_id = (select organization_id from public.organization_memberships where user_id = '10000000-0000-4000-8000-000000000004'))::bigint, 0::bigint, 'business onboarding leaves branch setup incomplete');
 select is((select count(*) from public.organization_subscriptions where plan_id = 'free')::bigint, 1::bigint, 'onboarding creates the free subscription');
-select throws_ok($$select public.create_first_organization('Second Shop', 'fixture-second-shop', null)$$, 'P0001', 'User already belongs to an organization', 'onboarding cannot be repeated');
+select lives_ok($$select public.create_initial_branch((select organization_id from public.organization_memberships where user_id = '10000000-0000-4000-8000-000000000004'), 'Main Branch', '1 Test Street', 'Pasig', 'Metro Manila')$$, 'owner can atomically create the first branch');
+select is((select organization_id from public.branches where name = 'Main Branch'), (select organization_id from public.organization_memberships where user_id = '10000000-0000-4000-8000-000000000004'), 'first branch belongs to the owner organization');
+select ok((select is_primary from public.branches where name = 'Main Branch'), 'first branch is primary');
+select is((select count(*) from public.audit_events where event_type = 'organization.created' and actor_user_id = '10000000-0000-4000-8000-000000000004')::bigint, 1::bigint, 'business creation is audited');
+select is((select count(*) from public.audit_events where event_type = 'branch.created' and actor_user_id = '10000000-0000-4000-8000-000000000004')::bigint, 1::bigint, 'branch creation is audited');
+select throws_ok($$select public.create_first_organization('Second Shop', 'other', 'fixture-second-shop')$$, 'P0001', 'User already belongs to an organization', 'business onboarding cannot be repeated');
+
+set local "request.jwt.claims" = '{"sub":"10000000-0000-4000-8000-000000000001","role":"authenticated"}';
+select throws_ok($$select public.create_initial_branch('20000000-0000-4000-8000-000000000002', 'Claimed Branch', '1 Attack Street', 'Pasig', 'Metro Manila')$$, '42501', 'Owner access required', 'Owner A cannot create an initial branch for Organization B');
 
 -- Cross-tenant foreign keys are rejected even for privileged SQL paths.
 reset role;

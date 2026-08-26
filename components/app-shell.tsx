@@ -6,7 +6,7 @@ import { BarChart3, CalendarDays, CarFront, ClipboardList, Gauge, Menu, Package,
 
 import { signOut } from "@/app/auth/actions";
 import { switchOrganization } from "@/app/dashboard/actions";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/submit-button";
 import type { OrganizationMembership } from "@/lib/auth/context";
 
 const nav = [
@@ -43,7 +43,7 @@ export function AppShell({ children, activeMembership, memberships, profileName 
         <header className="sticky top-0 z-20 flex items-center justify-between border-b border-zinc-200 bg-white/90 px-5 py-4 backdrop-blur lg:px-8">
           <div><div className="font-black lg:hidden">Kar<span className="text-amber-500">KR</span></div><div className="hidden text-sm font-semibold text-zinc-500 lg:block">{activeMembership.organizationName} · {activeMembership.branchName}</div></div>
           <div className="flex items-center gap-3">
-            {memberships.length > 1 ? <form action={switchOrganization} className="hidden items-center gap-2 sm:flex"><label className="sr-only" htmlFor="organizationId">Active organization</label><select id="organizationId" name="organizationId" defaultValue={activeMembership.organizationId} className="min-h-11 max-w-48 rounded-xl border border-zinc-200 bg-white px-3 text-sm font-semibold">{memberships.map((membership) => <option key={membership.organizationId} value={membership.organizationId}>{membership.organizationName}</option>)}</select><Button type="submit" variant="secondary">Switch</Button></form> : null}
+            {memberships.length > 1 ? <form action={switchOrganization} className="hidden items-center gap-2 sm:flex"><label className="sr-only" htmlFor="organizationId">Active organization</label><select id="organizationId" name="organizationId" defaultValue={activeMembership.organizationId} className="min-h-11 max-w-48 rounded-xl border border-zinc-200 bg-white px-3 text-sm font-semibold">{memberships.map((membership) => <option key={membership.organizationId} value={membership.organizationId}>{membership.organizationName}</option>)}</select><SubmitButton pendingText="Switching…" variant="secondary">Switch</SubmitButton></form> : null}
             <details className="group relative lg:hidden">
               <summary className="grid min-h-11 min-w-11 cursor-pointer list-none place-items-center rounded-xl border border-zinc-200 bg-white text-zinc-950 hover:bg-zinc-100 [&::-webkit-details-marker]:hidden" aria-label="Open navigation"><Menu size={20} /></summary>
               <nav className="absolute right-0 mt-2 w-56 rounded-2xl border border-zinc-200 bg-white p-2 shadow-xl">
@@ -54,9 +54,9 @@ export function AppShell({ children, activeMembership, memberships, profileName 
               <summary className="grid min-h-10 min-w-10 cursor-pointer list-none place-items-center rounded-full bg-zinc-950 px-2 text-xs font-bold text-white [&::-webkit-details-marker]:hidden" aria-label="Open user menu">{initials || "KR"}</summary>
               <div className="absolute right-0 mt-2 w-64 rounded-2xl border border-zinc-200 bg-white p-3 shadow-xl">
                 <p className="truncate px-2 text-sm font-bold">{profileName}</p><p className="truncate px-2 text-xs text-zinc-500">{activeMembership.role} · {activeMembership.organizationName}</p>
-                {memberships.length > 1 ? <form action={switchOrganization} className="mt-3 border-t border-zinc-100 pt-3 sm:hidden"><label className="text-xs font-semibold" htmlFor="mobileOrganizationId">Organization</label><select id="mobileOrganizationId" name="organizationId" defaultValue={activeMembership.organizationId} className="mt-1 min-h-11 w-full rounded-xl border border-zinc-200 bg-white px-3 text-sm">{memberships.map((membership) => <option key={membership.organizationId} value={membership.organizationId}>{membership.organizationName}</option>)}</select><Button className="mt-2 w-full" type="submit" variant="secondary">Switch</Button></form> : null}
+                {memberships.length > 1 ? <form action={switchOrganization} className="mt-3 border-t border-zinc-100 pt-3 sm:hidden"><label className="text-xs font-semibold" htmlFor="mobileOrganizationId">Organization</label><select id="mobileOrganizationId" name="organizationId" defaultValue={activeMembership.organizationId} className="mt-1 min-h-11 w-full rounded-xl border border-zinc-200 bg-white px-3 text-sm">{memberships.map((membership) => <option key={membership.organizationId} value={membership.organizationId}>{membership.organizationName}</option>)}</select><SubmitButton className="mt-2 w-full" pendingText="Switching…" variant="secondary">Switch</SubmitButton></form> : null}
                 <Link href="/dashboard/settings" className="mt-3 block rounded-xl px-2 py-2 text-sm font-semibold text-zinc-900 hover:bg-zinc-100">Profile settings</Link>
-                <form action={signOut}><button type="submit" className="min-h-11 w-full rounded-xl px-2 text-left text-sm font-semibold text-red-700 hover:bg-red-50">Sign out</button></form>
+                <form action={signOut}><SubmitButton className="w-full justify-start px-2" pendingText="Signing out…" variant="destructive">Sign out</SubmitButton></form>
               </div>
             </details>
           </div>

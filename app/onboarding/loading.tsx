@@ -1,0 +1,3 @@
+export default function OnboardingLoading() {
+  return <main className="grid min-h-screen place-items-center bg-zinc-100 px-5"><div role="status" className="w-full max-w-2xl animate-pulse rounded-3xl border border-zinc-200 bg-white p-7"><span className="sr-only">Checking account setup…</span><div className="h-4 w-40 rounded bg-zinc-200" /><div className="mt-5 h-9 w-80 max-w-full rounded bg-zinc-200" /><div className="mt-8 space-y-5"><div className="h-11 rounded-xl bg-zinc-200" /><div className="h-11 rounded-xl bg-zinc-200" /><div className="h-11 rounded-xl bg-zinc-200" /></div></div></main>;
+}

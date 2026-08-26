@@ -14,7 +14,7 @@ This repository includes:
 - Codex-specific `AGENTS.md`;
 - a long-form implementation roadmap with copy/paste phase prompts.
 
-The UI intentionally starts with demo data. Phase 1 connects authentication/onboarding to Supabase; later phases replace demo modules with production CRUD.
+Authentication and two-step owner onboarding are connected to Supabase. Later phases replace the intentionally empty operational modules with production CRUD.
 
 ## Tech baseline
 - Node 24 LTS
@@ -48,6 +48,7 @@ Current migration order:
 5. `0005_tenant_integrity.sql` — cross-table tenant consistency guards.
 6. `0006_auth_onboarding.sql` — user profile bootstrap and atomic first-shop onboarding.
 7. `0007_phase00_5_integrity.sql` — job-item/service and inventory-item/branch tenant guards.
+8. `0008_phase01_onboarding_state.sql` — business metadata, primary branches, and secure two-step owner onboarding RPCs.
 
 For disposable local validation, start Docker and run:
 
@@ -72,6 +73,8 @@ In Supabase Auth URL Configuration, set the Site URL to `NEXT_PUBLIC_APP_URL` an
 - `<NEXT_PUBLIC_APP_URL>/auth/confirm`
 
 Keep email confirmation enabled for production. The default callback supports Supabase PKCE `code` links; `/auth/confirm` also supports token-hash email templates. Apply all migrations before registering the first user so the profile trigger and onboarding RPC are available.
+
+Canonical account routes are `/signup`, `/login`, `/forgot-password`, and `/reset-password`. The older `/sign-up`, `/sign-in`, and `/update-password` paths remain redirects for backward compatibility. New owners resume from database-backed state at `/onboarding/business` or `/onboarding/branch`; no browser flag determines tenant access.
 
 ## Codex workflow
 Read `docs/PRODUCT_SPEC.md`, then start with `docs/CODEX_MASTER_PROMPT.md` and execute phases in `docs/CODEX_PHASES.md` one at a time.

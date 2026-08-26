@@ -19,11 +19,11 @@ export async function refreshSession(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser();
   const pathname = request.nextUrl.pathname;
-  const protectedRoute = pathname.startsWith("/dashboard") || pathname.startsWith("/onboarding");
+  const protectedRoute = ["/dashboard", "/onboarding", "/customers", "/vehicles", "/appointments", "/jobs", "/services", "/inventory", "/reports", "/settings"].some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
 
   if (!user && protectedRoute) {
     const url = request.nextUrl.clone();
-    url.pathname = "/sign-in";
+    url.pathname = "/login";
     url.search = "";
     url.searchParams.set("next", pathname);
     return NextResponse.redirect(url);
