@@ -1,0 +1,1 @@
+export default function Loading(){return <div className="mx-auto max-w-6xl animate-pulse"><div className="h-9 w-48 rounded bg-zinc-200"/><div className="mt-8 space-y-3">{[1,2,3].map(i=><div key={i} className="h-24 rounded-2xl bg-zinc-200"/>)}</div></div>}

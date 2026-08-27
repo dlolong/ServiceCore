@@ -1,0 +1,8 @@
+import assert from "node:assert/strict"; import test from "node:test";
+import { branchSchema, customerSchema, displayPhone, normalizePhone, normalizePlate, vehicleLabel, vehicleSchema } from "../lib/crm";
+test("normalizes common Philippine mobile forms",()=>{assert.equal(normalizePhone("0917 123 4567"),"+639171234567");assert.equal(normalizePhone("639171234567"),"+639171234567");assert.equal(displayPhone("+639171234567"),"0917 123 4567")});
+test("preserves international numbers in normalized form",()=>assert.equal(normalizePhone("+1 (415) 555-0100"),"+14155550100"));
+test("normalizes plate search keys",()=>{assert.equal(normalizePlate("abc-1234"),"ABC1234");assert.equal(normalizePlate(""),null)});
+test("builds consistent vehicle labels",()=>assert.equal(vehicleLabel({model_year:2024,make:"Toyota",model:"Fortuner",plate_number:"ABC 1234"}),"2024 Toyota Fortuner • ABC 1234"));
+test("validates branch and customer boundaries",()=>{assert.equal(branchSchema.safeParse({name:"A"}).success,false);assert.equal(customerSchema.safeParse({fullName:"J",phone:"",email:"",addressLine:"",city:"",province:"",notes:"",acceptDuplicate:false}).success,false)});
+test("validates vehicle year and odometer dynamically",()=>{const base={customerId:"50000000-0000-4000-8000-000000000001",make:"Toyota",model:"Vios",plateNumber:"",variant:"",color:"",vehicleType:"",fuelType:"",transmission:"",vin:"",engineNumber:"",notes:"",acceptDuplicate:false};assert.equal(vehicleSchema.safeParse({...base,modelYear:"1899",odometerKm:"0"}).success,false);assert.equal(vehicleSchema.safeParse({...base,modelYear:String(new Date().getFullYear()+1),odometerKm:"120"}).success,true);assert.equal(vehicleSchema.safeParse({...base,modelYear:"2020",odometerKm:"-1"}).success,false)});

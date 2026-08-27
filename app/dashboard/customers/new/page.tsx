@@ -1,0 +1,3 @@
+import Link from "next/link";
+import { CustomerForm } from "@/components/crm-forms";
+export default async function Page({searchParams}:{searchParams:Promise<{error?:string;warning?:string;duplicateId?:string}>}){const p=await searchParams;return <div className="mx-auto max-w-3xl"><div className="flex flex-wrap items-end justify-between gap-4"><div><p className="text-sm font-bold text-amber-700">Customers</p><h1 className="mt-1 text-3xl font-black">Add customer</h1><p className="mt-2 text-zinc-600">Keep the common path fast; contact and address details are optional.</p></div><Link className="text-sm font-bold text-amber-800 underline" href="/dashboard/customers/import">Preview a CSV import</Link></div><div className="mt-6"><CustomerForm {...p}/></div></div>}

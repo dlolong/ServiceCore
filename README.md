@@ -49,6 +49,8 @@ Current migration order:
 6. `0006_auth_onboarding.sql` — user profile bootstrap and atomic first-shop onboarding.
 7. `0007_phase00_5_integrity.sql` — job-item/service and inventory-item/branch tenant guards.
 8. `0008_phase01_onboarding_state.sql` — business metadata, primary branches, and secure two-step owner onboarding RPCs.
+9. `0009_phase02_crm.sql` — CRM fields, normalization, search view, branch operations, indexes, and audit triggers.
+10. `0010_fix_crm_audit_trigger.sql` — table-safe audit trigger field handling.
 
 For disposable local validation, start Docker and run:
 

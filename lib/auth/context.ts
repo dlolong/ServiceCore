@@ -8,6 +8,9 @@ import { createClient } from "@/lib/supabase/server";
 import { resolveOnboardingDestination } from "@/lib/auth/onboarding";
 
 export const ACTIVE_ORGANIZATION_COOKIE = "karkr-active-organization";
+export const ACTIVE_BRANCH_COOKIE = "karkr-active-branch";
+
+export type BranchSummary = { id: string; name: string; isPrimary: boolean };
 
 export type OrganizationMembership = {
   organizationId: string;
@@ -19,6 +22,7 @@ export type OrganizationMembership = {
   role: "owner" | "manager" | "advisor" | "technician" | "cashier" | "viewer";
   branchId: string;
   branchName: string;
+  branches: BranchSummary[];
 };
 
 type MembershipRow = {
@@ -51,11 +55,14 @@ export const getDashboardContext = cache(async function getDashboardContext() {
 
   if (error) throw new Error("Unable to load organization memberships.", { cause: error });
 
+  const cookieStore = await cookies();
+  const requestedBranchId = cookieStore.get(ACTIVE_BRANCH_COOKIE)?.value;
   const memberships = (data as unknown as MembershipRow[]).flatMap((membership) => {
     if (!membership.organizations) return [];
-    const branch = membership.organizations.branches
+    const branches = membership.organizations.branches
       .filter(({ is_active: isActive }) => isActive)
-      .sort((left, right) => Number(right.is_primary) - Number(left.is_primary))[0];
+      .sort((left, right) => Number(right.is_primary) - Number(left.is_primary));
+    const branch = branches.find(({ id }) => id === requestedBranchId) ?? branches[0];
     return [{
       organizationId: membership.organization_id,
       organizationName: membership.organizations.name,
@@ -66,12 +73,12 @@ export const getDashboardContext = cache(async function getDashboardContext() {
       role: membership.role,
       branchId: branch?.id ?? "",
       branchName: branch?.name ?? "No active branch",
+      branches: branches.map(({ id, name, is_primary }) => ({ id, name, isPrimary: is_primary })),
     }];
   });
 
   if (memberships.length === 0) redirect("/onboarding/business");
 
-  const cookieStore = await cookies();
   const requestedOrganizationId = cookieStore.get(ACTIVE_ORGANIZATION_COOKIE)?.value;
   const activeMembership = memberships.find(({ organizationId }) => organizationId === requestedOrganizationId) ?? memberships[0];
   if (!activeMembership.branchId) {
