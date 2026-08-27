@@ -24,6 +24,11 @@ const nav = [
 ] as const;
 
 const mobileNav = [nav[0], nav[3], nav[4], nav[1]] as const;
+const desktopNavGroups = [
+  [nav[0], nav[3], nav[4], nav[5]],
+  [nav[1], nav[2], nav[6]],
+  [nav[7], nav[8], nav[9]],
+] as const;
 
 function DismissibleDetails({ children, className }: { children: ReactNode; className?: string }) {
   const detailsRef = useRef<HTMLDetailsElement>(null);
@@ -65,11 +70,15 @@ export function AppShell({ children, activeMembership, memberships, profileName 
           <div className="text-2xl font-black">Kar<span className="text-amber-400">KR</span></div>
           <div className="mt-1 truncate text-xs text-zinc-400">{activeMembership.organizationName}</div>
           <div className="mt-1 truncate text-xs text-zinc-400">{activeMembership.branchName} · {activeMembership.role}</div>
-          <nav className="mt-8 space-y-1">
-            {nav.map(([href, Icon, label]) => {
-              const active = href === "/dashboard" ? pathname === href : pathname.startsWith(href);
-              return <Link key={href} href={href} className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold ${active ? "bg-white text-zinc-950" : "text-zinc-400 hover:bg-white/5 hover:text-white"}`}><Icon size={18}/>{label}</Link>
-            })}
+          <nav className="mt-8" aria-label="Main navigation">
+            {desktopNavGroups.map((group, groupIndex) => (
+              <div key={group[0][0]} className={`${groupIndex ? "mt-4 border-t border-white/10 pt-4" : ""} space-y-1`}>
+                {group.map(([href, Icon, label]) => {
+                  const active = href === "/dashboard" ? pathname === href : pathname.startsWith(href);
+                  return <Link key={href} href={href} className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold ${active ? "bg-white text-zinc-950" : "text-zinc-400 hover:bg-white/5 hover:text-white"}`}><Icon size={18}/>{label}</Link>;
+                })}
+              </div>
+            ))}
           </nav>
         </div>
       </aside>
