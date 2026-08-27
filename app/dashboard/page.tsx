@@ -1,18 +1,21 @@
-import { StatCard } from "@/components/stat-card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { getDashboardContext } from "@/lib/auth/context";
+import Link from "next/link";
+import { StatCard } from "@/components/stat-card"; import { Badge } from "@/components/ui/badge"; import { Button } from "@/components/ui/button"; import { Card } from "@/components/ui/card"; import { getDashboardContext } from "@/lib/auth/context"; import { zonedDateTimeToUtc } from "@/lib/operations"; import { createClient } from "@/lib/supabase/server";
 
 export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
-  const [{ error }, { activeMembership, profile }] = await Promise.all([searchParams, getDashboardContext()]);
-  const firstName = profile.fullName.split(/\s+/)[0];
-  return (
-    <div className="mx-auto max-w-7xl">
-      {error ? <div role="alert" className="mb-5 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-800">{error}</div> : null}
-      <div className="flex flex-wrap items-end justify-between gap-4"><div><Badge>Workspace ready</Badge><h1 className="mt-3 text-3xl font-black tracking-tight">Welcome, {firstName}.</h1><p className="mt-2 text-zinc-500">Here is the starting point for {activeMembership.organizationName}.</p></div><Button disabled title="Available in Phase 04">+ Add walk-in</Button></div>
-      <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><StatCard label="Cars today" value="0" note="Jobs arrive in Phase 05"/><StatCard label="Queue" value="0" note="Bookings arrive in Phase 04"/><StatCard label="Sales today" value="₱0" note="Payments arrive in Phase 06"/><StatCard label="Outstanding" value="₱0" note="Invoices arrive in Phase 06"/></div>
-      <Card className="mt-8 p-7 text-center sm:p-10"><h2 className="text-xl font-black">Your shop workspace is ready.</h2><p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-zinc-600">Complete the next product phases to add services, customers, vehicles, bookings, and job orders. This dashboard will populate from real tenant-scoped data as those workflows become available.</p></Card>
-    </div>
-  );
+  const [{ error }, { activeMembership, profile }, supabase] = await Promise.all([searchParams, getDashboardContext(), createClient()]);
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone: activeMembership.timezone }).format(new Date());
+  const start = zonedDateTimeToUtc(`${today}T00:00`, activeMembership.timezone)!; const end = new Date(start.valueOf() + 86400000);
+  const base = () => supabase.from("appointments").select("id", { count: "exact", head: true }).eq("organization_id", activeMembership.organizationId).eq("branch_id", activeMembership.branchId);
+  const [{ data: appointments, count: appointmentCount }, { count: confirmedCount }, { count: walkInCount }, { count: queueCount }] = await Promise.all([
+    supabase.from("appointments").select("id,starts_at,status,customers(full_name),vehicles(make,model),appointment_services(service_name_snapshot)", { count: "exact" }).eq("organization_id", activeMembership.organizationId).eq("branch_id", activeMembership.branchId).gte("starts_at", start.toISOString()).lt("starts_at", end.toISOString()).order("starts_at").limit(6),
+    base().eq("status", "confirmed").gte("starts_at", start.toISOString()).lt("starts_at", end.toISOString()),
+    base().eq("source", "walk_in").gte("created_at", start.toISOString()).lt("created_at", end.toISOString()),
+    supabase.from("queue_entries").select("id", { count: "exact", head: true }).eq("organization_id", activeMembership.organizationId).eq("branch_id", activeMembership.branchId).eq("queue_date", today).in("status", ["waiting", "called"]),
+  ]);
+  return <div className="mx-auto max-w-7xl">{error && <div role="alert" className="mb-5 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-800">{error}</div>}<div className="flex flex-wrap items-end justify-between gap-4"><div><Badge>{activeMembership.branchName}</Badge><h1 className="mt-3 text-3xl font-black">Welcome, {profile.fullName.split(/\s+/)[0]}.</h1><p className="mt-2 text-zinc-500">Today&apos;s operations for {activeMembership.organizationName}.</p></div><Button asChild><Link href="/dashboard/queue/new">+ Add walk-in</Link></Button></div><div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><StatCard label="Today’s appointments" value={String(appointmentCount ?? 0)} note="Scheduled visits"/><StatCard label="Waiting queue" value={String(queueCount ?? 0)} note="Waiting or called"/><StatCard label="Confirmed" value={String(confirmedCount ?? 0)} note="Confirmed today"/><StatCard label="Walk-ins today" value={String(walkInCount ?? 0)} note="Branch arrivals"/></div><Card className="mt-8 p-6"><div className="flex justify-between gap-3"><h2 className="text-xl font-black">Today&apos;s Schedule</h2><Link className="font-bold text-amber-800" href="/dashboard/appointments">View calendar</Link></div><div className="mt-5 divide-y divide-zinc-100">{appointments?.map((appointment) => <ScheduleRow key={appointment.id} appointment={appointment} timeZone={activeMembership.timezone}/>)}{!appointments?.length && <p className="py-8 text-center text-sm text-zinc-600">No appointments scheduled for today.</p>}</div></Card></div>;
+}
+
+function ScheduleRow({ appointment, timeZone }: { appointment: { id: string; starts_at: string | null; status: string; customers: { full_name: string } | { full_name: string }[] | null; vehicles: { make: string | null; model: string | null } | { make: string | null; model: string | null }[] | null; appointment_services: { service_name_snapshot: string }[] }; timeZone: string }) {
+  const customer = Array.isArray(appointment.customers) ? appointment.customers[0] : appointment.customers; const vehicle = Array.isArray(appointment.vehicles) ? appointment.vehicles[0] : appointment.vehicles;
+  return <Link href={`/dashboard/appointments/${appointment.id}`} className="grid min-h-16 grid-cols-[5rem_1fr_auto] items-center gap-3 py-3 text-zinc-950"><strong>{new Intl.DateTimeFormat("en-PH", { timeZone, hour: "numeric", minute: "2-digit" }).format(new Date(appointment.starts_at!))}</strong><span><span className="block font-bold">{vehicle?.make} {vehicle?.model}</span><span className="text-xs text-zinc-500">{customer?.full_name} · {appointment.appointment_services.map((item) => item.service_name_snapshot).join(", ")}</span></span><span className="text-xs font-bold capitalize">{appointment.status.replaceAll("_", " ")}</span></Link>;
 }

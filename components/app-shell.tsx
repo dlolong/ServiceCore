@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, CalendarDays, CarFront, ClipboardList, Gauge, Menu, Package, Settings, Users, Wrench } from "lucide-react";
+import { BarChart3, CalendarDays, CarFront, ClipboardList, Gauge, ListOrdered, Menu, Package, Settings, Users, Wrench } from "lucide-react";
 import { useEffect, useRef, type ReactNode } from "react";
 
 import { signOut } from "@/app/auth/actions";
@@ -15,12 +15,15 @@ const nav = [
   ["/dashboard/customers", Users, "Customers"],
   ["/dashboard/vehicles", CarFront, "Vehicles"],
   ["/dashboard/appointments", CalendarDays, "Appointments"],
+  ["/dashboard/queue", ListOrdered, "Queue"],
   ["/dashboard/jobs", ClipboardList, "Job Orders"],
   ["/dashboard/services", Wrench, "Services"],
   ["/dashboard/inventory", Package, "Inventory"],
   ["/dashboard/reports", BarChart3, "Reports"],
   ["/dashboard/settings", Settings, "Settings"],
 ] as const;
+
+const mobileNav = [nav[0], nav[3], nav[4], nav[1]] as const;
 
 function DismissibleDetails({ children, className }: { children: ReactNode; className?: string }) {
   const detailsRef = useRef<HTMLDetailsElement>(null);
@@ -79,7 +82,7 @@ export function AppShell({ children, activeMembership, memberships, profileName 
             <DismissibleDetails className="group relative lg:hidden">
               <summary className="grid min-h-11 min-w-11 cursor-pointer list-none place-items-center rounded-xl border border-zinc-200 bg-white text-zinc-950 hover:bg-zinc-100 [&::-webkit-details-marker]:hidden" aria-label="Open navigation"><Menu size={20} /></summary>
               <nav className="absolute right-0 mt-2 w-56 rounded-2xl border border-zinc-200 bg-white p-2 shadow-xl">
-                {nav.slice(5).map(([href, Icon, label]) => <Link key={href} href={href} className="flex min-h-11 items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold hover:bg-zinc-100"><Icon size={18} />{label}</Link>)}
+                {nav.filter(([href]) => !mobileNav.some(([mobileHref]) => mobileHref === href)).map(([href, Icon, label]) => <Link key={href} href={href} className="flex min-h-11 items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold hover:bg-zinc-100"><Icon size={18} />{label}</Link>)}
               </nav>
             </DismissibleDetails>
             <DismissibleDetails className="group relative">
@@ -96,10 +99,10 @@ export function AppShell({ children, activeMembership, memberships, profileName 
         <main className="p-5 lg:p-8">{children}</main>
       </div>
       <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-zinc-200 bg-white px-2 pb-[max(.5rem,env(safe-area-inset-bottom))] pt-2 lg:hidden">
-        {nav.slice(0,5).map(([href, Icon, label]) => {
+        {mobileNav.map(([href, Icon, label]) => {
           const active = href === "/dashboard" ? pathname === href : pathname.startsWith(href);
-          return <Link key={href} href={href} className={`flex flex-col items-center gap-1 py-1 text-[10px] font-semibold ${active ? "text-amber-700" : "text-zinc-600"}`}><Icon size={20}/><span>{label === "Appointments" ? "Booking" : label === "Job Orders" ? "Jobs" : label}</span></Link>
-        })}
+          return <Link key={href} href={href} className={`flex flex-col items-center gap-1 py-1 text-[10px] font-semibold ${active ? "text-amber-700" : "text-zinc-600"}`}><Icon size={20}/><span>{label === "Appointments" ? "Booking" : label}</span></Link>
+        })}<Link href="/dashboard/settings" className="flex flex-col items-center gap-1 py-1 text-[10px] font-semibold text-zinc-600"><Menu size={20}/><span>More</span></Link>
       </nav>
     </div>
   );

@@ -8,13 +8,13 @@ Tagline: **Your Car. Our Care.**
 This repository includes:
 - Next.js App Router + TypeScript + Tailwind;
 - Supabase browser/server client setup;
-- a responsive product shell and demo dashboard;
+- a responsive product shell with live CRM, service, appointment, calendar, and queue workflows;
 - PostgreSQL/Supabase schema for organizations, branches, customers, vehicles, services, appointments, job orders, payments, inventory, subscriptions, and audit events;
 - RLS helper functions and baseline policies;
 - Codex-specific `AGENTS.md`;
 - a long-form implementation roadmap with copy/paste phase prompts.
 
-Authentication and two-step owner onboarding are connected to Supabase. Later phases replace the intentionally empty operational modules with production CRUD.
+Authentication, two-step owner onboarding, CRM, service catalog/pricing, appointments, and the walk-in queue are connected to Supabase. Later phases add job execution and downstream operational modules.
 
 ## Tech baseline
 - Node 24 LTS
@@ -51,6 +51,9 @@ Current migration order:
 8. `0008_phase01_onboarding_state.sql` — business metadata, primary branches, and secure two-step owner onboarding RPCs.
 9. `0009_phase02_crm.sql` — CRM fields, normalization, search view, branch operations, indexes, and audit triggers.
 10. `0010_fix_crm_audit_trigger.sql` — table-safe audit trigger field handling.
+11. `0011_phase03_04_services_appointments_queue.sql` — service pricing and availability, appointment snapshots and transitions, and an atomic branch queue.
+12. `0012_phase03_04_security_audit.sql` — authorized price resolution, RPC-only queue writes, required service durations, and operations audit events.
+13. `0013_phase03_04_completion.sql` — tenant-safe appointment/queue search projections and add-on compatibility enforcement.
 
 For disposable local validation, start Docker and run:
 
@@ -60,6 +63,8 @@ supabase db reset
 supabase db lint --level warning
 supabase test db
 ```
+
+Browser regression checks use Playwright. Install its Chromium build where supported, then run `npm run test:e2e`. On systems where Playwright does not provide a bundled browser, set `PLAYWRIGHT_CHROME_PATH` to a compatible local Chrome executable. Set `E2E_BASE_URL` to reuse an already-running KarKR development server.
 
 Local authentication email is captured by Mailpit at `http://127.0.0.1:54324`; production SMTP is intentionally not configured in this repository.
 
