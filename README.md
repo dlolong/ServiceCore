@@ -14,7 +14,7 @@ This repository includes:
 - Codex-specific `AGENTS.md`;
 - a long-form implementation roadmap with copy/paste phase prompts.
 
-Authentication, onboarding, CRM, services, appointments, queue, job execution, inspections, estimates, invoices, payments, inventory, service history, and maintenance reminders are connected to Supabase.
+Authentication, onboarding, CRM, operations, finance, inventory, retention reminders, and multi-branch staff RBAC are connected to Supabase.
 
 ## Tech baseline
 - Node 24 LTS
@@ -60,6 +60,10 @@ Current migration order:
 17. `0017_phase05_technician_assignments.sql` — timestamped primary and per-service technician assignment.
 18. `0018_phase07_08_inventory_retention.sql` — append-only inventory, atomic transfers, service consumption, derived history, consent, and reminder queue.
 19. `0019_phase07_08_validation_fixes.sql` — legacy movement compatibility and null-safe tenant guards.
+20. `0020_phase09_staff_rbac.sql` — permission matrix, secure invitations, branch assignments, deactivation, restrictive RLS, and staff audit events.
+21. `0021_phase09_staff_directory.sql` — owner-authorized staff directory RPC.
+22. `0022_phase09_crypto_search_path.sql` — fixed trusted pgcrypto resolution for invitation hashing.
+23. `0023_phase09_branch_integrity.sql` — privileged-path tenant guards for staff and invitation branch assignments.
 
 For disposable local validation, start Docker and run:
 

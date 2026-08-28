@@ -66,7 +66,7 @@ select is((select balance_centavos from invoices),100000::bigint,'refund restore
 select throws_ok($$select void_invoice((select id from invoices),'bad')$$,'P0001','Paid invoice cannot be voided','invoice with remaining paid amount cannot be voided');
 select is((select count(*) from job_orders where organization_id='25000000-0000-4000-8000-000000000002')::bigint,0::bigint,'Owner A cannot read Org B jobs');
 
-reset role; insert into job_orders(id,organization_id,branch_id,customer_id,vehicle_id,status) values('95000000-0000-4000-8000-000000000002','25000000-0000-4000-8000-000000000002','45000000-0000-4000-8000-000000000002','55000000-0000-4000-8000-000000000002','65000000-0000-4000-8000-000000000002','queued');
+reset role; set local "request.jwt.claims"='{}'; insert into job_orders(id,organization_id,branch_id,customer_id,vehicle_id,status) values('95000000-0000-4000-8000-000000000002','25000000-0000-4000-8000-000000000002','45000000-0000-4000-8000-000000000002','55000000-0000-4000-8000-000000000002','65000000-0000-4000-8000-000000000002','queued');
 select throws_ok($$insert into estimates(organization_id,branch_id,job_order_id,subtotal_centavos,total_centavos) values('25000000-0000-4000-8000-000000000001','45000000-0000-4000-8000-000000000001','95000000-0000-4000-8000-000000000002',1,1)$$,'P0001','Estimate tenant mismatch','cross-tenant estimate guard rejects mismatch');
 select throws_ok($$insert into invoice_items(invoice_id,organization_id,description_snapshot,quantity,unit_price_centavos,line_total_centavos) values((select id from invoices),'25000000-0000-4000-8000-000000000002','attack',1,1,1)$$,'P0001','Invoice item tenant mismatch','cross-tenant invoice item rejected');
 
