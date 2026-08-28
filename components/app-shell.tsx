@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, CalendarDays, CarFront, ClipboardList, Gauge, ListOrdered, Menu, Package, Settings, Users, Wrench } from "lucide-react";
+import { BarChart3, Bell, CalendarDays, CarFront, ClipboardList, CreditCard, Gauge, ListOrdered, Menu, Package, Settings, Users, Wrench } from "lucide-react";
 import { useEffect, useRef, type ReactNode } from "react";
 
 import { signOut } from "@/app/auth/actions";
@@ -17,17 +17,19 @@ const nav = [
   ["/dashboard/appointments", CalendarDays, "Appointments"],
   ["/dashboard/queue", ListOrdered, "Queue"],
   ["/dashboard/jobs", ClipboardList, "Job Orders"],
+  ["/dashboard/payments", CreditCard, "Payments"],
   ["/dashboard/services", Wrench, "Services"],
   ["/dashboard/inventory", Package, "Inventory"],
+  ["/dashboard/reminders", Bell, "Reminders"],
   ["/dashboard/reports", BarChart3, "Reports"],
   ["/dashboard/settings", Settings, "Settings"],
 ] as const;
 
 const mobileNav = [nav[0], nav[3], nav[4], nav[1]] as const;
 const desktopNavGroups = [
-  [nav[0], nav[3], nav[4], nav[5]],
-  [nav[1], nav[2], nav[6]],
-  [nav[7], nav[8], nav[9]],
+  [nav[0], nav[3], nav[4], nav[5], nav[6]],
+  [nav[1], nav[2], nav[7]],
+  [nav[8], nav[9], nav[10], nav[11]],
 ] as const;
 
 function DismissibleDetails({ children, className }: { children: ReactNode; className?: string }) {

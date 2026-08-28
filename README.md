@@ -14,7 +14,7 @@ This repository includes:
 - Codex-specific `AGENTS.md`;
 - a long-form implementation roadmap with copy/paste phase prompts.
 
-Authentication, two-step owner onboarding, CRM, service catalog/pricing, appointments, and the walk-in queue are connected to Supabase. Later phases add job execution and downstream operational modules.
+Authentication, onboarding, CRM, services, appointments, queue, job execution, inspections, estimates, invoices, payments, inventory, service history, and maintenance reminders are connected to Supabase.
 
 ## Tech baseline
 - Node 24 LTS
@@ -54,6 +54,12 @@ Current migration order:
 11. `0011_phase03_04_services_appointments_queue.sql` — service pricing and availability, appointment snapshots and transitions, and an atomic branch queue.
 12. `0012_phase03_04_security_audit.sql` — authorized price resolution, RPC-only queue writes, required service durations, and operations audit events.
 13. `0013_phase03_04_completion.sql` — tenant-safe appointment/queue search projections and add-on compatibility enforcement.
+14. `0014_phase05_06_jobs_finance.sql` — job execution, private inspections/photos, estimates, invoices, receipts, and trusted payment accounting.
+15. `0015_phase05_06_completion.sql` — typed workflow transitions, proposed-work approval, and payment/invoice reversals.
+16. `0016_phase05_06_security_hardening.sql` — assigned-technician policies and cross-tenant finance guards.
+17. `0017_phase05_technician_assignments.sql` — timestamped primary and per-service technician assignment.
+18. `0018_phase07_08_inventory_retention.sql` — append-only inventory, atomic transfers, service consumption, derived history, consent, and reminder queue.
+19. `0019_phase07_08_validation_fixes.sql` — legacy movement compatibility and null-safe tenant guards.
 
 For disposable local validation, start Docker and run:
 
