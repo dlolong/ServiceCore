@@ -1,0 +1,11 @@
+# KarKR public data contract
+
+Anonymous callers receive data only through Phase 10 RPCs. They have no direct access to organizations, branches, services, customers, vehicles, appointments, jobs, invoices, payments, staff, internal inspections, private job photos, booking-request rows, or rate-limit rows.
+
+`get_public_shop` exposes only a published shop's name, slug, public description and images, public contact/social links, active branch address/contact/hours/map fields, explicitly public services, and active gallery images.
+
+`get_public_availability` exposes available timestamps only. It never returns appointment records, customer names, staff identities, schedule contents, or capacity details.
+
+`submit_public_booking` accepts validated contact and vehicle information into the isolated booking-request tables. Its response contains only a random confirmation token and public reference. Existing-customer matching happens only during an authorized internal confirmation and is never disclosed publicly.
+
+`get_public_booking_status` requires the random confirmation token and returns only reference, status, shop/branch names, preferred time, service snapshots, and an optional decline reason. It does not return contact information, vehicle identifiers, internal notes, customer IDs, or appointment IDs.

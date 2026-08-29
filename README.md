@@ -14,7 +14,7 @@ This repository includes:
 - Codex-specific `AGENTS.md`;
 - a long-form implementation roadmap with copy/paste phase prompts.
 
-Authentication, onboarding, CRM, operations, finance, inventory, retention reminders, and multi-branch staff RBAC are connected to Supabase.
+Authentication, onboarding, CRM, operations, finance, inventory, retention reminders, staff RBAC, and public shop booking are connected to Supabase.
 
 ## Tech baseline
 - Node 24 LTS
@@ -64,6 +64,8 @@ Current migration order:
 21. `0021_phase09_staff_directory.sql` — owner-authorized staff directory RPC.
 22. `0022_phase09_crypto_search_path.sql` — fixed trusted pgcrypto resolution for invitation hashing.
 23. `0023_phase09_branch_integrity.sql` — privileged-path tenant guards for staff and invitation branch assignments.
+24. `0024_phase10_public_booking.sql` — curated storefront data, safe availability, isolated booking requests, spam controls, and internal review.
+25. `0025_phase10_review_fix.sql` — unambiguous trusted booking-to-appointment conversion.
 
 For disposable local validation, start Docker and run:
 
