@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
 import { getSupabaseBrowserConfig } from "@/lib/env/client";
+import { privateEstimateResponseHeaders } from "@/lib/private-route-security";
 
 export async function refreshSession(request: NextRequest) {
   let response = NextResponse.next({ request });
@@ -27,6 +28,11 @@ export async function refreshSession(request: NextRequest) {
     url.search = "";
     url.searchParams.set("next", pathname);
     return NextResponse.redirect(url);
+  }
+
+  const privateHeaders=privateEstimateResponseHeaders(pathname);
+  if (privateHeaders) {
+    for(const [name,value] of Object.entries(privateHeaders))response.headers.set(name,value);
   }
 
   return response;

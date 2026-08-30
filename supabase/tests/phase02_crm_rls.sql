@@ -10,6 +10,7 @@ values
 insert into organizations(id,name,slug,created_by) values
  ('21000000-0000-4000-8000-000000000001','Phase Two A','phase-two-a','11000000-0000-4000-8000-000000000001'),
  ('21000000-0000-4000-8000-000000000002','Phase Two B','phase-two-b','11000000-0000-4000-8000-000000000002');
+insert into organization_subscriptions(organization_id,plan_id,status)values('21000000-0000-4000-8000-000000000001','multi_branch','active'),('21000000-0000-4000-8000-000000000002','multi_branch','active');
 insert into organization_memberships(organization_id,user_id,role) values
  ('21000000-0000-4000-8000-000000000001','11000000-0000-4000-8000-000000000001','owner'),
  ('21000000-0000-4000-8000-000000000001','11000000-0000-4000-8000-000000000003','advisor'),

@@ -11,11 +11,12 @@ const variants = {
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   asChild?: boolean;
   children: ReactNode;
+  size?: "default" | "sm";
   variant?: keyof typeof variants;
 };
 
-export function Button({ asChild = false, children, className, variant = "primary", ...props }: ButtonProps) {
-  const styles = cn("inline-flex min-h-11 items-center justify-center rounded-xl px-4 py-2 text-sm font-bold transition-colors disabled:cursor-not-allowed", variants[variant], className);
+export function Button({ asChild = false, children, className, size = "default", variant = "primary", ...props }: ButtonProps) {
+  const styles = cn("inline-flex items-center justify-center rounded-xl text-sm font-bold transition-colors disabled:cursor-not-allowed", size === "sm" ? "min-h-9 px-3 py-1.5" : "min-h-11 px-4 py-2", variants[variant], className);
 
   if (asChild && isValidElement(children)) {
     const child = children as ReactElement<{ className?: string }>;

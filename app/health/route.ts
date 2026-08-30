@@ -6,7 +6,7 @@ export async function GET() {
   return Response.json(
     {
       status: "ok",
-      service: "karkr-web",
+      service: "servicecore-web",
       version: packageJson.version,
       timestamp: new Date().toISOString(),
     },

@@ -2,29 +2,33 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, Bell, CalendarCheck, CalendarDays, CarFront, ClipboardList, CreditCard, Gauge, ListOrdered, Menu, Package, Settings, Users, Wrench } from "lucide-react";
+import { BarChart3, Bell, CalendarCheck, CalendarDays, CarFront, ClipboardList, CreditCard, Gauge, ListOrdered, Menu, Package, Settings, Users, Wrench, type LucideIcon } from "lucide-react";
 import { useEffect, useRef, type ReactNode } from "react";
 
 import { signOut } from "@/app/auth/actions";
 import { switchBranch, switchOrganization } from "@/app/dashboard/actions";
 import { SubmitButton } from "@/components/submit-button";
+import { BrandLogo } from "@/components/brand-logo";
 import type { OrganizationMembership } from "@/lib/auth/context";
+import { karkrNavigation } from "@/modules/platform/navigation";
 
-const nav = [
-  ["/dashboard", Gauge, "Dashboard"],
-  ["/dashboard/customers", Users, "Customers"],
-  ["/dashboard/vehicles", CarFront, "Vehicles"],
-  ["/dashboard/appointments", CalendarDays, "Appointments"],
-  ["/dashboard/queue", ListOrdered, "Queue"],
-  ["/dashboard/jobs", ClipboardList, "Job Orders"],
-  ["/dashboard/payments", CreditCard, "Payments"],
-  ["/dashboard/bookings", CalendarCheck, "Booking Requests"],
-  ["/dashboard/services", Wrench, "Services"],
-  ["/dashboard/inventory", Package, "Inventory"],
-  ["/dashboard/reminders", Bell, "Reminders"],
-  ["/dashboard/reports", BarChart3, "Reports"],
-  ["/dashboard/settings", Settings, "Settings"],
-] as const;
+const navigationIcons: Record<(typeof karkrNavigation)[number]["key"], LucideIcon> = {
+  dashboard: Gauge,
+  customers: Users,
+  vehicles: CarFront,
+  appointments: CalendarDays,
+  queue: ListOrdered,
+  jobs: ClipboardList,
+  payments: CreditCard,
+  bookings: CalendarCheck,
+  services: Wrench,
+  inventory: Package,
+  reminders: Bell,
+  reports: BarChart3,
+  settings: Settings,
+};
+
+const nav = karkrNavigation.map((item) => [item.href, navigationIcons[item.key], item.label] as const);
 
 const mobileNav = [nav[0], nav[3], nav[4], nav[1]] as const;
 const desktopNavGroups = [
@@ -67,33 +71,33 @@ export function AppShell({ children, activeMembership, memberships, profileName 
   const pathname = usePathname();
   const initials = profileName.split(/\s+/).slice(0, 2).map((part) => part[0]).join("").toUpperCase();
   return (
-    <div className="min-h-screen bg-zinc-100 lg:grid lg:grid-cols-[240px_1fr]">
-      <aside className="hidden border-r border-zinc-200 bg-zinc-950 text-white lg:block">
-        <div className="sticky top-0 p-5">
-          <div className="text-2xl font-black">Kar<span className="text-amber-400">KR</span></div>
+    <div id="dashboard-app-shell" className="flex h-dvh min-h-0 overflow-hidden bg-zinc-100 lg:grid lg:grid-cols-[224px_1fr]">
+      <aside id="dashboard-sidebar" className="hidden overflow-y-auto border-r border-zinc-200 bg-zinc-950 text-white lg:block">
+        <div className="p-5">
+          <Link href="/dashboard" className="inline-block" aria-label="KarKR dashboard"><BrandLogo tone="white" className="w-32" priority /></Link>
           <div className="mt-1 truncate text-xs text-zinc-400">{activeMembership.organizationName}</div>
           <div className="mt-1 truncate text-xs text-zinc-400">{activeMembership.branchName} · {activeMembership.role}</div>
-          <nav className="mt-8" aria-label="Main navigation">
+          <nav id="dashboard-desktop-navigation" className="mt-6" aria-label="Main navigation">
             {desktopNavGroups.map((group, groupIndex) => (
               <div key={group[0][0]} className={`${groupIndex ? "mt-4 border-t border-white/10 pt-4" : ""} space-y-1`}>
                 {group.map(([href, Icon, label]) => {
                   const active = href === "/dashboard" ? pathname === href : pathname.startsWith(href);
-                  return <Link key={href} href={href} className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold ${active ? "bg-white text-zinc-950" : "text-zinc-400 hover:bg-white/5 hover:text-white"}`}><Icon size={18}/>{label}</Link>;
+                  return <Link id={`desktop-nav-${label.toLowerCase().replaceAll(" ", "-")}`} key={href} href={href} className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold ${active ? "bg-white text-zinc-950" : "text-zinc-400 hover:bg-white/5 hover:text-white"}`}><Icon size={17}/>{label}</Link>;
                 })}
               </div>
             ))}
           </nav>
         </div>
       </aside>
-      <div className="min-w-0 pb-20 lg:pb-0">
-        <header className="sticky top-0 z-20 flex items-center justify-between border-b border-zinc-200 bg-white/90 px-5 py-4 backdrop-blur lg:px-8">
-          <div><div className="font-black lg:hidden">Kar<span className="text-amber-500">KR</span></div><div className="hidden text-sm font-semibold text-zinc-500 lg:block">{activeMembership.organizationName}</div></div>
+      <div id="dashboard-content-frame" className="flex min-h-0 min-w-0 flex-1 flex-col">
+        <header id="dashboard-header" className="z-20 flex shrink-0 items-center justify-between border-b border-zinc-200 bg-white/90 px-4 py-3 backdrop-blur lg:px-6">
+          <div><Link href="/dashboard" className="inline-block lg:hidden" aria-label="KarKR dashboard"><BrandLogo long={false} className="w-9" priority /></Link><div className="hidden text-sm font-semibold text-zinc-500 lg:block">{activeMembership.organizationName}</div></div>
           <div className="flex items-center gap-3">
             {activeMembership.branches.length > 1 ? <form action={switchBranch} className="flex items-center gap-2"><label className="sr-only" htmlFor="branchId">Current branch</label><select id="branchId" name="branchId" defaultValue={activeMembership.branchId} className="min-h-11 max-w-40 rounded-xl border border-zinc-200 bg-white px-3 text-sm font-semibold text-zinc-950">{activeMembership.branches.map((branch) => <option key={branch.id} value={branch.id}>{branch.name}</option>)}</select><SubmitButton pendingText="Switching…" variant="secondary" className="hidden sm:inline-flex">Switch</SubmitButton></form> : <span className="hidden text-sm font-semibold text-zinc-600 sm:inline">{activeMembership.branchName}</span>}
             {memberships.length > 1 ? <form action={switchOrganization} className="hidden items-center gap-2 sm:flex"><label className="sr-only" htmlFor="organizationId">Active organization</label><select id="organizationId" name="organizationId" defaultValue={activeMembership.organizationId} className="min-h-11 max-w-48 rounded-xl border border-zinc-200 bg-white px-3 text-sm font-semibold">{memberships.map((membership) => <option key={membership.organizationId} value={membership.organizationId}>{membership.organizationName}</option>)}</select><SubmitButton pendingText="Switching…" variant="secondary">Switch</SubmitButton></form> : null}
             <DismissibleDetails className="group relative lg:hidden">
               <summary className="grid min-h-11 min-w-11 cursor-pointer list-none place-items-center rounded-xl border border-zinc-200 bg-white text-zinc-950 hover:bg-zinc-100 [&::-webkit-details-marker]:hidden" aria-label="Open navigation"><Menu size={20} /></summary>
-              <nav className="absolute right-0 mt-2 w-56 rounded-2xl border border-zinc-200 bg-white p-2 shadow-xl">
+              <nav id="dashboard-overflow-navigation" className="absolute right-0 mt-2 w-56 rounded-2xl border border-zinc-200 bg-white p-2 shadow-xl">
                 {nav.filter(([href]) => !mobileNav.some(([mobileHref]) => mobileHref === href)).map(([href, Icon, label]) => <Link key={href} href={href} className="flex min-h-11 items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold hover:bg-zinc-100"><Icon size={18} />{label}</Link>)}
               </nav>
             </DismissibleDetails>
@@ -108,13 +112,13 @@ export function AppShell({ children, activeMembership, memberships, profileName 
             </DismissibleDetails>
           </div>
         </header>
-        <main className="p-5 lg:p-8">{children}</main>
+        <main id="dashboard-main-content" className="min-h-0 flex-1 touch-pan-y overflow-x-hidden overflow-y-auto overscroll-y-contain p-4 pb-24 sm:p-5 sm:pb-24 lg:p-6 lg:pb-6">{children}</main>
       </div>
-      <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-zinc-200 bg-white px-2 pb-[max(.5rem,env(safe-area-inset-bottom))] pt-2 lg:hidden">
+      <nav id="dashboard-mobile-navigation" className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-zinc-200 bg-white px-2 pb-[max(.5rem,env(safe-area-inset-bottom))] pt-2 lg:hidden">
         {mobileNav.map(([href, Icon, label]) => {
           const active = href === "/dashboard" ? pathname === href : pathname.startsWith(href);
-          return <Link key={href} href={href} className={`flex flex-col items-center gap-1 py-1 text-[10px] font-semibold ${active ? "text-amber-700" : "text-zinc-600"}`}><Icon size={20}/><span>{label === "Appointments" ? "Booking" : label}</span></Link>
-        })}<Link href="/dashboard/settings" className="flex flex-col items-center gap-1 py-1 text-[10px] font-semibold text-zinc-600"><Menu size={20}/><span>More</span></Link>
+          return <Link id={`mobile-nav-${label.toLowerCase().replaceAll(" ", "-")}`} key={href} href={href} className={`flex flex-col items-center gap-1 py-1 text-[10px] font-semibold ${active ? "text-amber-700" : "text-zinc-600"}`}><Icon size={20}/><span>{label === "Appointments" ? "Booking" : label}</span></Link>
+        })}<Link id="mobile-nav-more" href="/dashboard/settings" className="flex flex-col items-center gap-1 py-1 text-[10px] font-semibold text-zinc-600"><Menu size={20}/><span>More</span></Link>
       </nav>
     </div>
   );

@@ -6,10 +6,10 @@ set local search_path = public, extensions;
 -- Deterministic Phase 00.5 fixtures. The transaction is rolled back by this suite.
 insert into auth.users (id, aud, role, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
 values
-  ('10000000-0000-4000-8000-000000000001', 'authenticated', 'authenticated', 'owner-a@karkr.test', '', now(), '{}', '{}', now(), now()),
-  ('10000000-0000-4000-8000-000000000002', 'authenticated', 'authenticated', 'owner-b@karkr.test', '', now(), '{}', '{}', now(), now()),
-  ('10000000-0000-4000-8000-000000000003', 'authenticated', 'authenticated', 'staff-a@karkr.test', '', now(), '{}', '{}', now(), now()),
-  ('10000000-0000-4000-8000-000000000004', 'authenticated', 'authenticated', 'new-owner@karkr.test', '', now(), '{}', '{}', now(), now());
+  ('10000000-0000-4000-8000-000000000001', 'authenticated', 'authenticated', 'owner-a@servicecore.test', '', now(), '{}', '{}', now(), now()),
+  ('10000000-0000-4000-8000-000000000002', 'authenticated', 'authenticated', 'owner-b@servicecore.test', '', now(), '{}', '{}', now(), now()),
+  ('10000000-0000-4000-8000-000000000003', 'authenticated', 'authenticated', 'staff-a@servicecore.test', '', now(), '{}', '{}', now(), now()),
+  ('10000000-0000-4000-8000-000000000004', 'authenticated', 'authenticated', 'new-owner@servicecore.test', '', now(), '{}', '{}', now(), now());
 
 insert into public.organizations (id, name, slug, created_by)
 values

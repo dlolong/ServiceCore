@@ -14,3 +14,7 @@ Minimum matrix:
 - vehicle/customer, service/category, appointment, job item, payment, and inventory relationships reject cross-tenant parents.
 
 Later phases extend this matrix rather than replacing it.
+
+`appointment_vehicle_decoupling.sql` adds the ServiceCore scheduling boundary matrix: appointments with and without vehicles, preserved vehicle FK integrity, cross-tenant vehicle denial, no-vehicle search visibility, automotive queue rejection, and inactive-membership denial.
+
+`customer_digital_estimate_approval.sql` is the KarKR private-link matrix. It verifies hash-only token storage, one active link per estimate, the allowlisted anonymous DTO, explicit anonymous grant denial, exact-version invalidation, approve/decline idempotency, first-decision-wins behavior, expiry/revocation, audit privacy, branch access, and cross-tenant denial.

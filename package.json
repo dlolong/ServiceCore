@@ -1,5 +1,5 @@
 {
-  "name": "karkr",
+  "name": "servicecore",
   "version": "0.1.0",
   "private": true,
   "engines": {
@@ -22,6 +22,7 @@
     "next": "16.3.3",
     "react": "19.2.8",
     "react-dom": "19.2.8",
+    "stripe": "^22.6.0",
     "zod": "4.4.3"
   },
   "devDependencies": {

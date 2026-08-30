@@ -5,8 +5,9 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { getDashboardContext } from "@/lib/auth/context";
 import { firstError, formValue, normalizePlate } from "@/lib/crm";
-import { appointmentSchema, categorySchema, parseMoneyToCentavos, selectedValues, serviceSchema, walkInSchema, zonedDateTimeToUtc } from "@/lib/operations";
+import { categorySchema, parseMoneyToCentavos, selectedValues, serviceSchema, walkInSchema, zonedDateTimeToUtc } from "@/lib/operations";
 import { createClient } from "@/lib/supabase/server";
+import { saveAutomotiveAppointment } from "@/modules/automotive/scheduling/automotive-scheduling.service";
 
 function go(path:string,kind:"error"|"message",value:string):never { redirect(`${path}?${kind}=${encodeURIComponent(value)}`); }
 const admin=(role:string)=>["owner","manager"].includes(role);
@@ -92,7 +93,7 @@ async function resolveVisitEntities(data:FormData,organizationId:string,back:str
     const {data:created,error}=await supabase.from("vehicles").insert({organization_id:organizationId,customer_id:customerId,make:quick.data.vehicleMake,model:quick.data.vehicleModel,plate_number:quick.data.vehiclePlate||null,plate_normalized:quick.data.vehiclePlate?normalizePlate(quick.data.vehiclePlate):null,vehicle_type:quick.data.vehicleType||null}).select("id").single();
     if(error||!created) go(back,"error","Unable to create the vehicle."); vehicleId=created.id;
   }
-  return {customerId,vehicleId,supabase};
+  return {customerId,vehicleId};
 }
 
 export async function saveAppointment(data:FormData) {
@@ -102,20 +103,17 @@ export async function saveAppointment(data:FormData) {
   if(!branch) go(back,"error","Select an active branch in this organization.");
   const supabase=await createClient(),{data:branchRow}=await supabase.from("branches").select("timezone").eq("id",branch.id).single(),utc=zonedDateTimeToUtc(startsAt,branchRow?.timezone??activeMembership.timezone);
   if(!utc) go(back,"error","Enter a valid appointment date and time.");
-  const conflictStart=new Date(utc.valueOf()-30*60_000),conflictEnd=new Date(utc.valueOf()+30*60_000);
-  let conflictQuery=supabase.from("appointments").select("id",{count:"exact",head:true}).eq("organization_id",activeMembership.organizationId).eq("branch_id",branch.id).in("status",["requested","confirmed","checked_in","queued"]).gte("starts_at",conflictStart.toISOString()).lte("starts_at",conflictEnd.toISOString());
-  if(appointmentId) conflictQuery=conflictQuery.neq("id",appointmentId);
-  const {count}=await conflictQuery;
-  if((count??0)>0&&data.get("acceptConflict")!=="on") go(back,"error",`${count} nearby booking${count===1?"":"s"} may overlap. Review the schedule and check “Allow an overlapping booking” to continue.`);
   const resolved=await resolveVisitEntities(data,activeMembership.organizationId,back);
-  const parsed=appointmentSchema.safeParse({appointmentId,branchId,customerId:resolved.customerId,vehicleId:resolved.vehicleId,serviceIds:selectedValues(data,"serviceIds"),startsAt,customerNote:formValue(data,"customerNote"),internalNote:formValue(data,"internalNote")});
-  if(!parsed.success) go(back,"error",firstError(parsed.error));
-  const {data:saved,error}=await resolved.supabase.rpc("save_appointment",{p_appointment_id:parsed.data.appointmentId,p_branch_id:parsed.data.branchId,p_customer_id:parsed.data.customerId,p_vehicle_id:parsed.data.vehicleId,p_service_ids:parsed.data.serviceIds,p_starts_at:utc.toISOString(),p_customer_note:parsed.data.customerNote,p_internal_note:parsed.data.internalNote});
-  if(error||!saved) go(back,"error",error?.message.includes("unavailable")||error?.message.includes("compatible")?error.message:"Unable to save appointment.");
-  revalidatePath("/dashboard/appointments"); redirect(`/dashboard/appointments/${saved}?message=${encodeURIComponent(`Appointment ${parsed.data.appointmentId?"updated":"booked"}.`)}`);
+  let saved:string;
+  try {
+    saved=await saveAutomotiveAppointment({appointmentId:appointmentId||null,organizationId:activeMembership.organizationId,branchId,customerId:resolved.customerId,vehicleId:resolved.vehicleId,serviceIds:selectedValues(data,"serviceIds"),staffAssignments:selectedValues(data,"staffIds").map(staffId=>({staffId})),resourceAssignments:selectedValues(data,"resourceIds").map(resourceId=>({resourceId})),scheduledStart:utc.toISOString(),allowAppointmentConflict:data.get("acceptConflict")==="on",customerNote:formValue(data,"customerNote")||null,internalNote:formValue(data,"internalNote")||null});
+  } catch(error) {
+    go(back,"error",error instanceof Error?error.message:"Unable to save appointment.");
+  }
+  revalidatePath("/dashboard/appointments"); redirect(`/dashboard/appointments/${saved}?message=${encodeURIComponent(`Appointment ${appointmentId?"updated":"booked"}.`)}`);
 }
 
 export async function transitionAppointment(data:FormData){const id=formValue(data,"id"),supabase=await createClient();const{error}=await supabase.rpc("transition_appointment",{p_appointment_id:id,p_action:formValue(data,"action"),p_reason:formValue(data,"reason")||null});if(error)go(`/dashboard/appointments/${id}`,"error","That appointment transition is not allowed.");revalidatePath("/dashboard");go(`/dashboard/appointments/${id}`,"message","Appointment updated.");}
 export async function enqueueAppointment(data:FormData){const id=formValue(data,"id"),supabase=await createClient();const{error}=await supabase.rpc("enqueue_appointment",{p_appointment_id:id});if(error)go(`/dashboard/appointments/${id}`,"error",error.code==="23505"?"This appointment is already in the queue.":error.message);revalidatePath("/dashboard");redirect("/dashboard/queue?message=Appointment+added+to+queue.");}
-export async function createWalkIn(data:FormData){const back="/dashboard/queue/new",{activeMembership}=await getDashboardContext();if(!operator(activeMembership.role))go("/dashboard/queue","error","You have read-only access.");const resolved=await resolveVisitEntities(data,activeMembership.organizationId,back);const parsed=walkInSchema.safeParse({branchId:formValue(data,"branchId"),customerId:resolved.customerId,vehicleId:resolved.vehicleId,serviceIds:selectedValues(data,"serviceIds"),notes:formValue(data,"notes")});if(!parsed.success)go(back,"error",firstError(parsed.error));if(!activeMembership.branches.some(branch=>branch.id===parsed.data.branchId))go(back,"error","Select an active branch in this organization.");const{error}=await resolved.supabase.rpc("create_walk_in",{p_branch_id:parsed.data.branchId,p_customer_id:parsed.data.customerId,p_vehicle_id:parsed.data.vehicleId,p_service_ids:parsed.data.serviceIds,p_notes:parsed.data.notes});if(error)go(back,"error",error.message);revalidatePath("/dashboard");redirect("/dashboard/queue?message=Walk-in+added+to+queue.");}
+export async function createWalkIn(data:FormData){const back="/dashboard/queue/new",{activeMembership}=await getDashboardContext();if(!operator(activeMembership.role))go("/dashboard/queue","error","You have read-only access.");const resolved=await resolveVisitEntities(data,activeMembership.organizationId,back);const parsed=walkInSchema.safeParse({branchId:formValue(data,"branchId"),customerId:resolved.customerId,vehicleId:resolved.vehicleId,serviceIds:selectedValues(data,"serviceIds"),notes:formValue(data,"notes")});if(!parsed.success)go(back,"error",firstError(parsed.error));if(!activeMembership.branches.some(branch=>branch.id===parsed.data.branchId))go(back,"error","Select an active branch in this organization.");const supabase=await createClient();const{error}=await supabase.rpc("create_walk_in",{p_branch_id:parsed.data.branchId,p_customer_id:parsed.data.customerId,p_vehicle_id:parsed.data.vehicleId,p_service_ids:parsed.data.serviceIds,p_notes:parsed.data.notes});if(error)go(back,"error",error.message);revalidatePath("/dashboard");redirect("/dashboard/queue?message=Walk-in+added+to+queue.");}
 export async function transitionQueue(data:FormData){const supabase=await createClient();const{error}=await supabase.rpc("transition_queue_entry",{p_queue_id:formValue(data,"id"),p_status:formValue(data,"status")});if(error)go("/dashboard/queue","error","That queue transition is not allowed.");revalidatePath("/dashboard");go("/dashboard/queue","message","Queue updated.");}

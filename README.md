@@ -1,6 +1,6 @@
 # KarKR
 
-**KarKR** is a multi-tenant SaaS starter for car wash, detailing, auto-care, maintenance, and automotive service businesses.
+**KarKR** is a multi-tenant SaaS product for car wash, detailing, auto-care, maintenance, and automotive service businesses, powered by the internal ServiceCore platform.
 
 Tagline: **Your Car. Our Care.**
 
@@ -66,6 +66,9 @@ Current migration order:
 23. `0023_phase09_branch_integrity.sql` — privileged-path tenant guards for staff and invitation branch assignments.
 24. `0024_phase10_public_booking.sql` — curated storefront data, safe availability, isolated booking requests, spam controls, and internal review.
 25. `0025_phase10_review_fix.sql` — unambiguous trusted booking-to-appointment conversion.
+26. `0026_phase11_reporting.sql` — permission-protected, timezone-aware owner reporting and reconciled operational analytics.
+27. `0027_phase11_anon_grant_hardening.sql` — explicit RPC-only anonymous access across Supabase local image versions.
+28. `0028_phase11_revenue_phase12_billing.sql` — reconciled invoice-line revenue, plans, subscriptions, entitlements, limits, and trusted billing synchronization.
 
 For disposable local validation, start Docker and run:
 

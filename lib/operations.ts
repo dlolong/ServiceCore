@@ -54,7 +54,6 @@ export const serviceSchema = z.object({
   description: optional(2000), shortDescription: optional(300), code: optional(50),
   durationMinutes: z.coerce.number().int().min(1).max(10080), basePrice: z.string(), isAddOn: z.boolean(), parentServiceId: z.union([z.literal(""), z.uuid()]).transform((value) => value || null),
 });
-export const appointmentSchema = z.object({ appointmentId: z.union([z.literal(""), z.uuid()]).transform((value) => value || null), branchId: z.uuid(), customerId: z.uuid(), vehicleId: z.uuid(), serviceIds: z.array(z.uuid()).min(1), startsAt: z.string(), customerNote: optional(1000), internalNote: optional(1000) });
 export const walkInSchema = z.object({ branchId: z.uuid(), customerId: z.uuid(), vehicleId: z.uuid(), serviceIds: z.array(z.uuid()).min(1), notes: optional(1000) });
 
 export function selectedValues(data: FormData, key: string) { return data.getAll(key).filter((value): value is string => typeof value === "string"); }

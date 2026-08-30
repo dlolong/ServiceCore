@@ -1,4 +1,4 @@
--- KarKR core tenant/domain schema
+-- ServiceCore core tenant/domain schema
 create extension if not exists pgcrypto;
 
 create type public.organization_role as enum ('owner','manager','advisor','technician','cashier','viewer');

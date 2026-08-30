@@ -10,6 +10,7 @@ export const metadata: Metadata = {
   description: "Smart software for car wash, detailing and auto service businesses.",
   applicationName: "KarKR",
   keywords: ["car wash software", "auto service software", "Philippines"],
+  icons: { icon: "/images/KarKR_logo_black.png", apple: "/images/KarKR_logo_black.png" },
   openGraph: {
     title: "KarKR — Your Car. Our Care.",
     description: "Smart software for car wash, detailing and auto service businesses.",

@@ -102,7 +102,7 @@ begin
     raise exception 'Invalid optional business details' using errcode = '22023';
   end if;
 
-  perform pg_advisory_xact_lock(hashtextextended('karkr:organization-slug', 0));
+  perform pg_advisory_xact_lock(hashtextextended('servicecore:organization-slug', 0));
   loop
     candidate_slug := case when suffix = 1 then normalized_slug else normalized_slug || '-' || suffix::text end;
     exit when not exists (select 1 from public.organizations where slug = candidate_slug);

@@ -1,4 +1,4 @@
-project_id = "karkr"
+project_id = "servicecore"
 
 [api]
 enabled = true

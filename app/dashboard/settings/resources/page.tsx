@@ -1,0 +1,20 @@
+import Link from "next/link";
+import { FormMessage } from "@/components/form-message";
+import { SubmitButton } from "@/components/submit-button";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { getDashboardContext } from "@/lib/auth/context";
+import { createClient } from "@/lib/supabase/server";
+import { saveSchedulingResource, toggleSchedulingResource } from "./actions";
+
+export default async function SchedulingResourcesPage({ searchParams }: { searchParams: Promise<{ error?: string; message?: string }> }) {
+  const [params, { activeMembership }, supabase] = await Promise.all([searchParams, getDashboardContext(), createClient()]);
+  const { data: resources } = await supabase.from("scheduling_resources").select("id,name,branch_id,resource_type,capacity,is_active,branches(name)").eq("organization_id", activeMembership.organizationId).order("name");
+  const canManage = ["owner", "manager"].includes(activeMembership.role);
+  return <div id="scheduling-resources-page" className="mx-auto max-w-5xl">
+    <p className="text-sm font-bold text-amber-700">Settings</p><h1 className="mt-1 text-3xl font-black">Service bays and resources</h1><p className="mt-2 text-zinc-600">Manage the bays, stations, rooms, or equipment that can be reserved for appointments.</p><FormMessage {...params}/>
+    {canManage&&<Card className="mt-6 p-5"><h2 className="font-black">Add service bay or resource</h2><form id="scheduling-resource-form" action={saveSchedulingResource} className="mt-4 grid gap-4 sm:grid-cols-2"><input name="id" type="hidden" value=""/><label className="text-sm font-semibold">Name<Input id="scheduling-resource-name-input" required name="name" maxLength={120} className="mt-2"/></label><label className="text-sm font-semibold">Branch<select id="scheduling-resource-branch-select" required name="branchId" className="mt-2 min-h-11 w-full rounded-xl border bg-white px-3">{activeMembership.branches.map(branch=><option key={branch.id} value={branch.id}>{branch.name}</option>)}</select></label><label className="text-sm font-semibold">Type<select id="scheduling-resource-type-select" name="resourceType" className="mt-2 min-h-11 w-full rounded-xl border bg-white px-3"><option value="bay">Bay</option><option value="station">Station</option><option value="room">Room</option><option value="equipment">Equipment</option><option value="other">Other</option></select></label><label className="text-sm font-semibold">Capacity<Input id="scheduling-resource-capacity-input" required name="capacity" type="number" min={1} max={100} defaultValue={1} className="mt-2"/></label><SubmitButton id="scheduling-resource-save-button" pendingText="Saving…">Save resource</SubmitButton></form></Card>}
+    <div id="scheduling-resources-list" className="mt-6 grid gap-3">{resources?.map(resource=>{const branch=Array.isArray(resource.branches)?resource.branches[0]:resource.branches;return <Card id={`scheduling-resource-row-${resource.id}`} key={resource.id} className="flex flex-wrap items-center justify-between gap-3 p-5"><div><h2 className="font-black">{resource.name}</h2><p className="text-sm text-zinc-500">{branch?.name} · {resource.resource_type} · capacity {resource.capacity}{resource.is_active?"":" · inactive"}</p></div>{canManage&&<div className="flex gap-2"><Button asChild variant="secondary"><Link id={`scheduling-resource-${resource.id}-edit-button`} href={`/dashboard/settings/resources/${resource.id}/edit`}>Edit</Link></Button><form action={toggleSchedulingResource}><input type="hidden" name="id" value={resource.id}/><input type="hidden" name="active" value={String(!resource.is_active)}/><SubmitButton id={`scheduling-resource-${resource.id}-toggle-button`} variant={resource.is_active?"destructive":"secondary"} pendingText="Updating…">{resource.is_active?"Deactivate":"Activate"}</SubmitButton></form></div>}</Card>})}{!resources?.length&&<Card className="p-8 text-center text-zinc-600">No service bays or scheduling resources yet.</Card>}</div>
+  </div>;
+}

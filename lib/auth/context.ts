@@ -7,8 +7,8 @@ import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { resolveOnboardingDestination } from "@/lib/auth/onboarding";
 
-export const ACTIVE_ORGANIZATION_COOKIE = "karkr-active-organization";
-export const ACTIVE_BRANCH_COOKIE = "karkr-active-branch";
+export const ACTIVE_ORGANIZATION_COOKIE = "servicecore-active-organization";
+export const ACTIVE_BRANCH_COOKIE = "servicecore-active-branch";
 
 export type BranchSummary = { id: string; name: string; isPrimary: boolean };
 

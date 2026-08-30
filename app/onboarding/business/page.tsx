@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 
 import { createOrganization } from "@/app/onboarding/actions";
 import { BusinessIdentityFields } from "@/components/business-identity-fields";
+import { BrandLogo } from "@/components/brand-logo";
 import { FormMessage } from "@/components/form-message";
 import { SubmitButton } from "@/components/submit-button";
 import { Input } from "@/components/ui/input";
@@ -16,7 +17,8 @@ export default async function BusinessOnboardingPage({ searchParams }: { searchP
   return (
     <main className="min-h-screen bg-zinc-100 px-5 py-8 sm:py-12">
       <section className="mx-auto w-full max-w-2xl rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm sm:p-9">
-        <p className="text-sm font-bold text-amber-700">KarKR setup · Step 1 of 2</p>
+        <BrandLogo className="w-32" priority />
+        <p className="mt-5 text-sm font-bold text-amber-700">Setup · Step 1 of 2</p>
         <h1 className="mt-2 text-3xl font-black tracking-tight">Tell us about your business.</h1>
         <p className="mt-3 text-sm leading-6 text-zinc-600">We’ll create your private organization and assign you as its owner. You can add the first branch next.</p>
         <FormMessage error={error} />

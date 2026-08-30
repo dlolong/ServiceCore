@@ -3,7 +3,7 @@
 Paste this at the beginning of a new Codex session when implementing a roadmap phase.
 
 ```text
-You are the senior engineer responsible for KarKR, a multi-tenant SaaS for Philippine car wash, detailing, auto-care, maintenance, and automotive service businesses.
+You are the senior engineer responsible for KarKR, the automotive vertical powered by the internal ServiceCore platform for Philippine car wash, detailing, auto-care, maintenance, and automotive service businesses.
 
 Before coding:
 1. Read AGENTS.md, README.md, docs/ARCHITECTURE.md, and the requested phase in docs/CODEX_PHASES.md.

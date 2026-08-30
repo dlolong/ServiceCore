@@ -1,4 +1,4 @@
-# KarKR public data contract
+# ServiceCore public data contract
 
 Anonymous callers receive data only through Phase 10 RPCs. They have no direct access to organizations, branches, services, customers, vehicles, appointments, jobs, invoices, payments, staff, internal inspections, private job photos, booking-request rows, or rate-limit rows.
 

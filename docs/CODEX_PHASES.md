@@ -1,4 +1,42 @@
-# KarKR — Codex Implementation Phases
+# ServiceCore — Codex Implementation Phases
+
+## KarKR operational checkpoint — Customer Digital Estimate Approval
+
+Advisors can now generate, copy, replace, and explicitly revoke a private seven-day approval link for the current estimate. Customers review an allowlisted, mobile-first estimate page without an account and approve or decline through the existing authorization model. Only a SHA-256 token hash is stored; anonymous table access is denied; estimate revisions supersede links; and the transactional decision boundary provides idempotent first-decision-wins behavior with audit events.
+
+## KarKR operational checkpoint — Service Advisor Workflow
+
+Job Order detail now presents a compact advisor workspace spanning inspection, versioned estimate authorization, branch parts readiness, work eligibility, invoice payments, QC, and vehicle release. Estimate revisions invalidate authorization automatically; PostgreSQL blocks work without inspection/current authorization/parts and blocks release without a paid invoice. Shared inventory and finance remain Core capabilities consumed by Automotive Work Execution.
+
+## KarKR operational checkpoint — Assignment Context
+
+KarKR Calendar, Queue, and appointment details now compose scheduled staff and resource context through a batched Automotive read model. Queue conversion shows that context and offers an unchecked, explicit option to initialize the single Job Order technician. The database reloads and validates the authoritative scheduled membership and performs creation plus optional assignment atomically. No permanent staff synchronization or service-bay transfer exists.
+
+## Platform architecture checkpoint — Scheduling Assignments
+
+Core Scheduling now accepts optional staff and generic resource assignments. Memberships remain canonical staff identities and existing branch assignments remain canonical eligibility. Branch-owned resources support active/inactive history and integer capacity. Core Availability evaluates staff/resource occupancy, while `save_appointment_with_assignments` persists the appointment, service snapshots, and replacement assignments atomically under the existing branch transaction lock. KarKR displays staff and service-bay terminology without leaking those terms into Core.
+
+## Platform architecture checkpoint — Core Availability
+
+Core Scheduling evaluates shared availability before appointment persistence. Core Availability owns UTC interval validation, branch-timezone operating hours, active/branch-enabled services, derived duration, blocking statuses, overlap evaluation, staff/resource availability, capacity, and update self-exclusion. PostgreSQL serializes branch writes and repeats conflict checks for concurrency safety.
+
+## Platform architecture checkpoint — Automotive Work Execution
+
+KarKR Job Order writes now enter a named Automotive Work Execution service. Queue conversion, status transitions, technician assignments, service assignments, and additional-work changes no longer originate as raw RPC calls in server actions. Core Scheduling remains independent from Job Orders. PostgreSQL continues to own atomic conversion, idempotency, centavo totals, RLS, and audit history.
+
+## Platform architecture checkpoint — core scheduling boundary
+
+The staff appointment save path now follows `KarKR action → Automotive Scheduling Adapter → Core Scheduling Service → save_appointment`. Core owns shared validation and authorization without a vehicle field. The automotive adapter preserves KarKR's required-vehicle policy and tenant/customer vehicle validation, while the existing SQL RPC preserves atomic appointment, vehicle association, and service snapshot persistence. No database migration was required for this application boundary.
+
+## Platform architecture checkpoint — appointment/vehicle decoupling
+
+Completed after Phase 12:
+
+- `appointments.vehicle_id` is an optional automotive association;
+- core appointment validation supports schedules without vehicles;
+- KarKR booking, walk-in, queue, and job-order flows retain explicit vehicle requirements;
+- appointment search and UI safely retain no-vehicle records;
+- cross-tenant vehicle attachment and no-vehicle RLS behavior have dedicated pgTAP coverage.
 
 Each phase is intentionally scoped so Codex can complete and verify it in a dedicated session. Do not ask Codex to implement all phases in one giant run.
 

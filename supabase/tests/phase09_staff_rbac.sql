@@ -11,6 +11,7 @@ insert into auth.users(id,instance_id,aud,role,email,encrypted_password,email_co
 ('19000000-0000-4000-8000-000000000009','00000000-0000-0000-0000-000000000000','authenticated','authenticated','rbac-owner-b@example.com','',now(),'{}','{}',now(),now());
 update profiles p set full_name=split_part(u.email,'@',1) from auth.users u where p.id=u.id and u.id::text like '19000000-%';
 insert into organizations(id,name,slug) values('29000000-0000-4000-8000-000000000001','RBAC A','rbac-a'),('29000000-0000-4000-8000-000000000002','RBAC B','rbac-b');
+insert into organization_subscriptions(organization_id,plan_id,status)values('29000000-0000-4000-8000-000000000001','multi_branch','active'),('29000000-0000-4000-8000-000000000002','multi_branch','active');
 insert into organization_memberships(id,organization_id,user_id,role) values
 ('39000000-0000-4000-8000-000000000001','29000000-0000-4000-8000-000000000001','19000000-0000-4000-8000-000000000001','owner'),
 ('39000000-0000-4000-8000-000000000002','29000000-0000-4000-8000-000000000001','19000000-0000-4000-8000-000000000002','manager'),

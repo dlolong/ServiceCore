@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 
 import { createInitialBranch } from "@/app/onboarding/actions";
 import { FormMessage } from "@/components/form-message";
+import { BrandLogo } from "@/components/brand-logo";
 import { SubmitButton } from "@/components/submit-button";
 import { Input } from "@/components/ui/input";
 import { requireAuthenticatedUser } from "@/lib/auth/context";
@@ -16,7 +17,8 @@ export default async function BranchOnboardingPage({ searchParams }: { searchPar
   return (
     <main className="min-h-screen bg-zinc-100 px-5 py-8 sm:py-12">
       <section className="mx-auto w-full max-w-2xl rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm sm:p-9">
-        <p className="text-sm font-bold text-amber-700">KarKR setup · Step 2 of 2</p>
+        <BrandLogo className="w-32" priority />
+        <p className="mt-5 text-sm font-bold text-amber-700">Setup · Step 2 of 2</p>
         <h1 className="mt-2 text-3xl font-black tracking-tight">Set up your main branch.</h1>
         <p className="mt-3 text-sm leading-6 text-zinc-600">Add the first operating location for {organization?.name ?? "your business"}. It becomes the default branch.</p>
         <FormMessage error={error} />
