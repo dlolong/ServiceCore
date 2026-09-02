@@ -35,6 +35,8 @@ This dependency direction is one-way: automotive may depend on core, while core 
 
 `modules/automotive/work-execution` owns KarKR Job Order conversion, status semantics, technician/service assignment, additional-work coordination, and controlled automotive errors. Appointment-to-Job conversion requires a valid same-tenant customer and active vehicle and is idempotent for the queue/appointment relationship.
 
+The same module owns Automotive parts requirements and Job Order lifecycle policy. It maps current authorized estimate lines and service recipes to generic Core Inventory reservation calls. Work cannot start until required quantities are secured. Estimate revision and cancellation release stale allocations; completion preserves legacy recipe consumption, records actual consumption only, and releases unused allocations.
+
 KarKR appointment forms present Core staff as assigned staff and Core scheduling resources as service bays. These are presentation mappings only. Automotive certification, technician specialization, Vehicle policy, and Job Order execution assignments remain outside Core; scheduled appointment staff are not silently made authoritative Job Order technicians.
 
 Inspection, work, QC, completion, and release remain automotive concerns. Payments and service catalog records are consumed through shared capabilities but are not moved into the automotive module. PostgreSQL remains authoritative for line snapshots, totals, permissions, row locking, RLS, and audit events.

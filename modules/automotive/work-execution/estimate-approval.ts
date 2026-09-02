@@ -1,6 +1,8 @@
 import { createHash, randomBytes } from "node:crypto";
 import { z } from "zod";
 
+import { encryptDeliverySecret, type EncryptedDeliverySecret } from "@/lib/notifications/delivery-secret";
+
 export const ESTIMATE_APPROVAL_LINK_LIFETIME_DAYS = 7;
 export const ESTIMATE_APPROVAL_TOKEN_BYTES = 32;
 
@@ -53,7 +55,12 @@ export const publicEstimateApprovalSchema = z.union([inactiveStateSchema, estima
 export type PublicEstimateApproval = z.infer<typeof publicEstimateApprovalSchema>;
 
 export type EstimateApprovalLinkPersistence = {
-  create: (input: { estimateId: string; tokenHash: string; expiresAt: string }) => Promise<{ linkId: string; expiresAt: string }>;
+  create: (input: {
+    estimateId:string;tokenHash:string;expiresAt:string;deliverySecret:EncryptedDeliverySecret|null;
+  }) => Promise<{
+    linkId:string;expiresAt:string;
+    delivery:{email:{status:string;reason:string|null};sms:{status:string;reason:string|null}};
+  }>;
   revoke: (linkId: string) => Promise<void>;
 };
 
@@ -81,14 +88,20 @@ async function defaultPersistence(): Promise<EstimateApprovalLinkPersistence> {
   return import("@/modules/automotive/work-execution/estimate-approval.runtime").then((module) => module.estimateApprovalLinkPersistence);
 }
 
-export async function createEstimateApprovalLink(estimateId: string, persistence?: EstimateApprovalLinkPersistence) {
+export async function createEstimateApprovalLink(
+  estimateId:string,
+  persistence?:EstimateApprovalLinkPersistence,
+  deliverySecretKey=process.env.NOTIFICATION_LINK_ENCRYPTION_KEY,
+) {
   const parsedEstimateId = z.uuid().parse(estimateId);
   const token = createEstimateApprovalToken();
   const expiresAt = estimateApprovalExpiry().toISOString();
+  const deliverySecret=deliverySecretKey?encryptDeliverySecret(token,deliverySecretKey):null;
   const result = await (persistence ?? await defaultPersistence()).create({
     estimateId: parsedEstimateId,
     tokenHash: hashEstimateApprovalToken(token),
     expiresAt,
+    deliverySecret,
   });
   return { ...result, token };
 }

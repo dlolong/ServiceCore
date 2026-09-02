@@ -126,6 +126,24 @@ The existing database functions remain the concurrency and persistence boundary.
 
 KarKR composes inspection, the latest estimate authorization snapshot, branch inventory availability, invoice payments, and Job Order status into a Service Advisor view. Automotive owns estimate authorization, part requirements, work readiness, recommended actions, QC, and release readiness. Core Inventory remains the stock ledger and Core finance remains the invoice/payment source of truth.
 
+### Parts reservation boundary
+
+KarKR derives required parts from the current authorized estimate and service-consumable recipes, then calls the shared Core Inventory reservation boundary. Core Inventory knows only organization, branch, inventory item, quantity, operation, and an opaque external reference. It has no Vehicle, Estimate, or Job Order policy.
+
+```text
+Estimate / Job Order
+        ↓
+Automotive Parts Requirement
+        ↓
+Core Inventory Reservation
+        ↓
+Consumption or Release
+        ↓
+Inventory Movement ledger
+```
+
+`inventory_movements` remains the only physical on-hand source of truth. Active reservation remainder is an allocation ledger, and available quantity is derived as on hand minus that remainder. PostgreSQL locks the inventory item before checking and reserving availability, so competing final-unit requests serialize. Consumption reduces both reservation remainder and physical on hand atomically; release reduces only reservation remainder.
+
 ```text
 Inspection → Estimate → Authorization → Parts → Work → QC → Payment → Release
 ```
@@ -134,7 +152,7 @@ The Automotive policy returns explicit blockers for presentation. Transactional 
 
 ### Customer digital estimate approval
 
-KarKR can issue a private, expiring customer link for the current estimate version. Server-only code generates a 256-bit bearer token and stores only its SHA-256 hash. The anonymous route calls two narrowly granted security-definer functions; anonymous roles have no direct access to the link, estimate, customer, vehicle, Job Order, or audit tables.
+KarKR can issue a private, expiring customer link for the current estimate version. Server-only code generates a 256-bit bearer token; public validation stores only its SHA-256 hash, while optional asynchronous delivery uses a separate encrypted expiring secret described below. The anonymous route calls two narrowly granted security-definer functions; anonymous roles have no direct access to the link, estimate, customer, vehicle, Job Order, notification, or audit tables.
 
 ```text
 Advisor Job Order
@@ -146,6 +164,20 @@ Advisor Job Order
 ```
 
 The public projection is allowlisted to business/branch contact details, a Job Order reference, basic vehicle identity, estimate lines, and totals. It excludes customer identifiers/contact data, VIN, notes, inventory references, staff data, payments, and internal records. The decision function locks both link and estimate, verifies the exact current version and amount, consumes the link, records `digital_link` authorization, and audits the outcome in one transaction. Estimate changes supersede active links.
+
+### Transactional notification outbox
+
+Core notification infrastructure owns recipient eligibility, per-channel outbox state, atomic claiming, leases, retries, safe diagnostics, and provider adapters. Automotive creates `ESTIMATE_AWAITING_APPROVAL` intent and renders its own estimate templates; Core does not import Automotive concepts. The application cron route is the composition root that injects Automotive templates into the shared worker.
+
+```text
+Automotive approval request
+  → approval link + Email/SMS outbox rows (one transaction)
+  → shared eligibility and bounded claim
+  → configured provider adapter
+  → Sent / Retry / Failed / Cancelled
+```
+
+Raw approval tokens never enter the generic outbox payload, logs, or audit metadata. Public validation still stores only SHA-256 hashes. An AES-256-GCM encrypted, expiring delivery secret is kept in a service-role-only table until the link is decided, revoked, superseded, or expired. Provider failure does not roll back the link or remove the manual Copy Link fallback.
 
 ## 2. Multi-tenancy
 `organizations` is the tenant root. `organization_memberships` maps authenticated users to tenants and roles.
@@ -184,7 +216,17 @@ Alternative exit: `cancelled`.
 Transitions must eventually be centralized and audited; do not scatter arbitrary status updates across UI components.
 
 ## 6. Service history
-A completed job order becomes the source of truth for service history. Never duplicate history manually when it can be derived from completed jobs. Consumer-visible summaries can be materialized later for performance/privacy.
+A completed Job Order is the source event for Automotive service history. Completion transactionally creates one immutable `vehicle_service_records` snapshot and its approved work-item snapshots. The live Job Order remains operational data; history does not change if that operational record is later edited. The same transaction advances a vehicle odometer only when the captured reading is greater and replaces the active maintenance projection for each configured service. Core never imports this Automotive lifecycle.
+
+```text
+Final Job Order completion
+  -> immutable vehicle service record
+  -> monotonic vehicle odometer update
+  -> one active vehicle/service due projection
+  -> generic notification outbox when a reminder stage is reached
+```
+
+`vehicle_service_history` remains as a compatibility query model. It prefers durable snapshots and temporarily falls back to legacy completed Job Orders that have not yet been backfilled, so deployment does not hide existing customer history. A bounded service-role backfill function exists for controlled operations; migrations never run it automatically.
 
 ## 7. External providers
 Use adapter boundaries:

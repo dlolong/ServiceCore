@@ -4,6 +4,10 @@ import { z } from "zod";
 
 const optionalSecret = (minimumLength = 1) =>
   z.preprocess((value) => value === "" ? undefined : value, z.string().min(minimumLength).optional());
+const optionalNotificationProvider=z.preprocess(
+  (value)=>value===""?undefined:value,
+  z.enum(["disabled","console"]).optional(),
+);
 
 const serverSchema = z.object({
   SUPABASE_SERVICE_ROLE_KEY: optionalSecret(),
@@ -14,6 +18,10 @@ const serverSchema = z.object({
   RESEND_API_KEY: optionalSecret(),
   TWILIO_ACCOUNT_SID: optionalSecret(),
   TWILIO_AUTH_TOKEN: optionalSecret(),
+  NOTIFICATION_LINK_ENCRYPTION_KEY: optionalSecret(),
+  NOTIFICATION_CRON_SECRET: optionalSecret(24),
+  EMAIL_PROVIDER:optionalNotificationProvider,
+  SMS_PROVIDER:optionalNotificationProvider,
 });
 
 export const serverEnv = serverSchema.parse({
@@ -25,4 +33,8 @@ export const serverEnv = serverSchema.parse({
   RESEND_API_KEY: process.env.RESEND_API_KEY,
   TWILIO_ACCOUNT_SID: process.env.TWILIO_ACCOUNT_SID,
   TWILIO_AUTH_TOKEN: process.env.TWILIO_AUTH_TOKEN,
+  NOTIFICATION_LINK_ENCRYPTION_KEY:process.env.NOTIFICATION_LINK_ENCRYPTION_KEY,
+  NOTIFICATION_CRON_SECRET:process.env.NOTIFICATION_CRON_SECRET,
+  EMAIL_PROVIDER:process.env.EMAIL_PROVIDER,
+  SMS_PROVIDER:process.env.SMS_PROVIDER,
 });

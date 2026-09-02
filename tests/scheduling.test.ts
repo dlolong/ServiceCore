@@ -14,6 +14,7 @@ const branchId = "43000000-0000-4000-8000-000000000001";
 const customerId = "53000000-0000-4000-8000-000000000001";
 const serviceId = "83000000-0000-4000-8000-000000000001";
 const vehicleId = "63000000-0000-4000-8000-000000000001";
+const maintenanceDueId = "73000000-0000-4000-8000-000000000001";
 
 const coreInput: SaveAppointmentInput = {
   appointmentId: null,
@@ -101,6 +102,39 @@ test("automotive scheduling validates and atomically persists a valid vehicle as
 
   assert.equal(result, "automotive-appointment-id");
   assert.equal(persistedVehicleId, vehicleId);
+});
+
+test("automotive scheduling carries maintenance linkage only to its atomic persistence extension", async () => {
+  let persistedMaintenanceDueId: string | null | undefined;
+  const result = await saveAutomotiveAppointment({ ...coreInput, vehicleId, maintenanceDueId }, {
+    validateVehicle: async () => undefined,
+    getActiveMaintenanceAppointment: async (lookup) => {
+      assert.deepEqual(lookup, { maintenanceDueId, branchId, customerId, vehicleId, serviceIds: [serviceId] });
+      return null;
+    },
+    coreDependencies: coreDependencies(),
+    persist: async (input, _vehicleId, actualMaintenanceDueId) => {
+      assert.equal("maintenanceDueId" in input, false);
+      persistedMaintenanceDueId = actualMaintenanceDueId;
+      return "linked-appointment-id";
+    },
+  });
+
+  assert.equal(result, "linked-appointment-id");
+  assert.equal(persistedMaintenanceDueId, maintenanceDueId);
+});
+
+test("automotive scheduling reuses an active maintenance appointment instead of creating a duplicate", async () => {
+  let persisted = false;
+  const result = await saveAutomotiveAppointment({ ...coreInput, vehicleId, maintenanceDueId }, {
+    validateVehicle: async () => undefined,
+    getActiveMaintenanceAppointment: async () => "existing-appointment-id",
+    coreDependencies: coreDependencies(),
+    persist: async () => { persisted = true; return "duplicate"; },
+  });
+
+  assert.equal(result, "existing-appointment-id");
+  assert.equal(persisted, false);
 });
 
 test("KarKR scheduling preserves its required-vehicle policy", async () => {

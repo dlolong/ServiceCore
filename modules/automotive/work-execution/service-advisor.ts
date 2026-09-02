@@ -2,7 +2,14 @@ export type PartsReadinessStatus = "NOT_REQUIRED" | "READY" | "PARTIAL" | "NOT_R
 export type AdvisorAction = "PREPARE_ESTIMATE" | "RECORD_AUTHORIZATION" | "CHECK_PARTS" | "START_WORK" | "RESUME_WORK" | "SEND_TO_QC" | "RECORD_PAYMENT" | "RELEASE_VEHICLE" | "NONE";
 
 export type EstimateLineAmount = { quantity: number; unitPriceCentavos: number; discountCentavos: number };
-export type PartRequirement = { inventoryItemId: string; name: string; requiredQuantity: number; availableQuantity: number };
+export type PartRequirement = {
+  inventoryItemId: string;
+  name: string;
+  requiredQuantity: number;
+  reservedQuantity: number;
+  consumedQuantity: number;
+  availableQuantity: number;
+};
 
 export function calculateEstimateLineTotalCentavos(line: EstimateLineAmount) {
   if (!Number.isInteger(line.quantity) || line.quantity <= 0 || !Number.isInteger(line.unitPriceCentavos) || line.unitPriceCentavos < 0 || !Number.isInteger(line.discountCentavos) || line.discountCentavos < 0) throw new Error("Estimate line amounts are invalid.");
@@ -17,8 +24,11 @@ export function calculateEstimateTotals(lines: EstimateLineAmount[], discountCen
 
 export function evaluatePartsReadiness(requirements: PartRequirement[]) {
   if (!requirements.length) return { status: "NOT_REQUIRED" as const, requiredCount: 0, readyCount: 0, blockers: [] as string[] };
-  const ready = requirements.filter((part) => part.availableQuantity >= part.requiredQuantity);
-  const blockers = requirements.filter((part) => part.availableQuantity < part.requiredQuantity).map((part) => `${part.name}: requires ${part.requiredQuantity}, ${part.availableQuantity} available`);
+  const ready = requirements.filter((part) => part.reservedQuantity + part.consumedQuantity >= part.requiredQuantity);
+  const blockers = requirements.filter((part) => part.reservedQuantity + part.consumedQuantity < part.requiredQuantity).map((part) => {
+    const securedQuantity = part.reservedQuantity + part.consumedQuantity;
+    return `${part.name}: requires ${part.requiredQuantity}, ${securedQuantity} secured, ${part.availableQuantity} available`;
+  });
   return { status: (ready.length === requirements.length ? "READY" : ready.length ? "PARTIAL" : "NOT_READY") as PartsReadinessStatus, requiredCount: requirements.length, readyCount: ready.length, blockers };
 }
 

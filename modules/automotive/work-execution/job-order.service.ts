@@ -23,7 +23,7 @@ const transitionTargets: Record<JobOrderAction, Partial<Record<AutomotiveJobOrde
   quality_check: { in_progress: "quality_check" },
   ready: { quality_check: "ready_for_release" },
   complete: { ready: "completed", ready_for_release: "completed" },
-  cancel: { draft: "cancelled", queued: "cancelled" },
+  cancel: { draft: "cancelled", awaiting_approval: "cancelled", approved: "cancelled", queued: "cancelled" },
 };
 
 const queueConversionSchema = z.object({ queueId: z.uuid(), copyScheduledStaff: z.boolean().default(false), scheduledStaffMembershipId: z.uuid().nullable().default(null) });

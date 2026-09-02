@@ -48,6 +48,8 @@ Review at 1366×768, 1440×900, and common mobile widths 320, 375, 390, and 430 
 
 Complex Job Orders use a compact section navigation plus a sticky desktop Service Advisor panel. On mobile the panel participates in the single page flow. Add/edit estimate lines, authorization, and payment are focused dialogs; never nest these dialogs. The first viewport should expose identity, status, estimate, authorization, parts, balance, blockers, and the recommended next action.
 
+Job Order Parts use a desktop table and mobile cards with Required, Reserved, Consumed, Available, Shortage, and Status values. Reserve, usage, and release are focused dialogs on the Job Order route. On hand is labeled as physical stock; released allocation must never be presented as a stock receipt.
+
 Customer estimate review is a separate, mobile-first public page rather than a dashboard/portal shell. It shows business identity, basic vehicle context, itemized money, a prominent total, and explicit decision confirmation. It must never use wording that implies the link was sent when KarKR only generated/copied it. Invalid, expired, revoked, superseded, and already-decided states need calm, actionable copy without exposing internal identifiers.
 
 ## Spacing and typography
@@ -72,3 +74,5 @@ Every meaningful rendered root, section, form, table, dialog, menu, control, and
 Pages are mobile-first, avoid horizontal overflow, expose visible loading/empty/error states, preserve visible focus, use native semantic HTML, and keep touch targets practical. Dense tables may become cards on narrow screens. Reusable visual components should accept an `id` prop when practical and derive child IDs from it.
 
 The current application predates the complete ID convention. Add IDs whenever a screen is materially changed; a dedicated screen-by-screen pass should use Playwright at 320, 375, 390, and 430 pixels rather than unsafe mechanical JSX rewrites.
+
+Maintenance uses a compact desktop table and mobile cards. Keep due-status counts and filters in the first viewport, preserve semantic `maintenance-*` IDs, and route rebooking through the existing appointment form instead of creating a parallel booking UI. Show the linked appointment and reminder state independently: “Appointment scheduled” suppresses reminders but does not imply completed maintenance. Use the standard dialog for an explicit snooze-until date and optional reason; keep Resume Reminders inline and retain the actual due date on screen.

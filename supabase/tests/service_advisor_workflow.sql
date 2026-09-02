@@ -30,7 +30,7 @@ insert into inventory_items(id,organization_id,branch_id,name,unit,sell_price_ce
 ('a6000000-0000-4000-8000-000000000002','26000000-0000-4000-8000-000000000001','46000000-0000-4000-8000-000000000002','Other Branch Pad','set',50000);
 insert into inventory_movements(organization_id,branch_id,inventory_item_id,movement_type,quantity_delta,idempotency_key) values('26000000-0000-4000-8000-000000000001','46000000-0000-4000-8000-000000000001','a6000000-0000-4000-8000-000000000001','opening',1,'advisor-opening');
 
-select plan(27);
+select plan(28);
 select has_column('public','estimates','authorization_method','authorization method exists');
 select has_column('public','estimates','authorized_total_centavos','authorized total snapshot exists');
 select has_column('public','estimate_items','inventory_item_id','estimate part inventory link exists');
@@ -43,12 +43,13 @@ select is((select total_centavos from estimates where job_order_id='96000000-000
 select lives_ok($$select record_estimate_authorization((select id from estimates where job_order_id='96000000-0000-4000-8000-000000000001'),'approve','phone','customer approved')$$,'customer authorization recorded');
 select is((select authorized_total_centavos from estimates where job_order_id='96000000-0000-4000-8000-000000000001'),200000::bigint,'authorization snapshots estimate total');
 select is((select status::text from job_orders where id='96000000-0000-4000-8000-000000000001'),'approved','authorization advances queued job');
-select throws_ok($$select transition_job('96000000-0000-4000-8000-000000000001','start')$$,'P0001','Required parts are not available at this branch','parts shortage blocks work start');
+select throws_ok($$select transition_job('96000000-0000-4000-8000-000000000001','start')$$,'P0001','Reserve all required parts before work starts','unreserved parts block work start');
 select lives_ok($$select save_estimate_item((select id from estimates where job_order_id='96000000-0000-4000-8000-000000000001'),(select id from estimate_items where inventory_item_id='a6000000-0000-4000-8000-000000000001'),'part','a6000000-0000-4000-8000-000000000001','Brake Pad Set',1,50000,0)$$,'approved estimate can be revised safely');
 select is((select status::text from estimates where job_order_id='96000000-0000-4000-8000-000000000001'),'draft','material change invalidates authorization');
 select is((select authorized_total_centavos from estimates where job_order_id='96000000-0000-4000-8000-000000000001'),null::bigint,'authorization snapshot cleared');
 select ok(exists(select 1 from audit_events where entity_id=(select id from estimates where job_order_id='96000000-0000-4000-8000-000000000001') and event_type='estimate.authorization_invalidated'),'authorization invalidation audited');
 select lives_ok($$select record_estimate_authorization((select id from estimates where job_order_id='96000000-0000-4000-8000-000000000001'),'approve','in_person',null)$$,'revised estimate reauthorized');
+select lives_ok($$select reserve_job_required_parts('96000000-0000-4000-8000-000000000001','advisor-reserve-all')$$,'authorized required parts reserve before work');
 select lives_ok($$select transition_job('96000000-0000-4000-8000-000000000001','start')$$,'approved work with ready parts starts');
 select lives_ok($$select transition_job('96000000-0000-4000-8000-000000000001','quality_check')$$,'work enters QC');
 select lives_ok($$select transition_job('96000000-0000-4000-8000-000000000001','ready')$$,'QC completes');

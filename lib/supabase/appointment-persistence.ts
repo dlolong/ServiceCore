@@ -18,6 +18,7 @@ export type AppointmentPersistenceInput = {
 
 type AppointmentStorageExtension = {
   vehicleId: string | null;
+  maintenanceDueId?:string|null;
 };
 
 export async function persistAppointment(input: AppointmentPersistenceInput) {
@@ -27,8 +28,8 @@ export async function persistAppointment(input: AppointmentPersistenceInput) {
 /** Storage-only extension used to preserve the existing atomic RPC transaction. */
 export async function persistAppointmentWithExtension(input: AppointmentPersistenceInput, extension: AppointmentStorageExtension) {
   const supabase = await createClient();
-  const { data: appointmentId, error } = await supabase.rpc("save_appointment_with_assignments", {
-    p_appointment_id: input.appointmentId,
+  const rpcName=extension.maintenanceDueId?"save_maintenance_appointment":"save_appointment_with_assignments";
+  const commonPayload={
     p_branch_id: input.branchId,
     p_customer_id: input.customerId,
     p_vehicle_id: extension.vehicleId,
@@ -39,7 +40,11 @@ export async function persistAppointmentWithExtension(input: AppointmentPersiste
     p_customer_note: input.customerNote,
     p_internal_note: input.internalNote,
     p_allow_conflict: input.allowAppointmentConflict ?? false,
-  });
+  };
+  const payload=extension.maintenanceDueId
+    ?{...commonPayload,p_maintenance_due_id:extension.maintenanceDueId}
+    :{...commonPayload,p_appointment_id:input.appointmentId};
+  const { data: appointmentId, error } = await supabase.rpc(rpcName,payload);
   if (error || !appointmentId) {
     const safeMessage = error?.message.includes("unavailable") || error?.message.includes("compatible")
       ? error.message

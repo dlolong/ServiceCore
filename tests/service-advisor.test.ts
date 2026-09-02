@@ -10,8 +10,8 @@ test("estimate totals use integer centavos for service and part lines",()=>{
 
 test("parts readiness distinguishes none, partial, and ready",()=>{
   assert.equal(evaluatePartsReadiness([]).status,"NOT_REQUIRED");
-  assert.deepEqual(evaluatePartsReadiness([{inventoryItemId:"a",name:"Filter",requiredQuantity:1,availableQuantity:3},{inventoryItemId:"b",name:"Pads",requiredQuantity:1,availableQuantity:0}]).status,"PARTIAL");
-  assert.equal(evaluatePartsReadiness([{inventoryItemId:"a",name:"Filter",requiredQuantity:1,availableQuantity:1}]).status,"READY");
+  assert.deepEqual(evaluatePartsReadiness([{inventoryItemId:"a",name:"Filter",requiredQuantity:1,reservedQuantity:1,consumedQuantity:0,availableQuantity:2},{inventoryItemId:"b",name:"Pads",requiredQuantity:1,reservedQuantity:0,consumedQuantity:0,availableQuantity:0}]).status,"PARTIAL");
+  assert.equal(evaluatePartsReadiness([{inventoryItemId:"a",name:"Filter",requiredQuantity:1,reservedQuantity:1,consumedQuantity:0,availableQuantity:0}]).status,"READY");
 });
 
 test("work readiness keeps authorization and parts as independent blockers",()=>{

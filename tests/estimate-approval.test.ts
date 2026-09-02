@@ -11,23 +11,27 @@ import {
   parsePublicEstimateApproval,
   type EstimateApprovalLinkPersistence,
 } from "../modules/automotive/work-execution/estimate-approval";
+import { decryptDeliverySecret } from "../lib/notifications/delivery-secret";
 import { privateEstimateResponseHeaders } from "../lib/private-route-security";
 
-test("approval tokens have 256 bits of randomness and only their hash crosses persistence",async()=>{
+test("approval tokens use hash-only validation plus an encrypted short-lived delivery secret",async()=>{
   const token=createEstimateApprovalToken();
   assert.equal(estimateApprovalTokenSchema.safeParse(token).success,true);
   const tokenHash=hashEstimateApprovalToken(token);
   assert.match(tokenHash,/^[0-9a-f]{64}$/);
   assert.notEqual(tokenHash,token);
 
-  let persisted:{estimateId:string;tokenHash:string;expiresAt:string}|undefined;
+  let persisted:Parameters<EstimateApprovalLinkPersistence["create"]>[0]|undefined;
   const persistence:EstimateApprovalLinkPersistence={
-    async create(input){persisted=input;return{linkId:"5a000000-0000-4000-8000-000000000001",expiresAt:input.expiresAt};},
+    async create(input){persisted=input;return{linkId:"5a000000-0000-4000-8000-000000000001",expiresAt:input.expiresAt,delivery:{email:{status:"cancelled",reason:"DELIVERY_SECRET_UNAVAILABLE"},sms:{status:"cancelled",reason:"DELIVERY_SECRET_UNAVAILABLE"}}};},
     async revoke(){},
   };
-  const result=await createEstimateApprovalLink("4a000000-0000-4000-8000-000000000001",persistence);
+  const encryptionKey=Buffer.alloc(32,9).toString("base64");
+  const result=await createEstimateApprovalLink("4a000000-0000-4000-8000-000000000001",persistence,encryptionKey);
   assert.equal(persisted?.tokenHash,hashEstimateApprovalToken(result.token));
   assert.equal("token" in (persisted??{}),false);
+  assert.equal(JSON.stringify(persisted?.deliverySecret).includes(result.token),false);
+  assert.equal(decryptDeliverySecret(persisted!.deliverySecret!,encryptionKey),result.token);
   assert.equal(result.token.length,43);
 });
 

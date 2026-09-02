@@ -31,4 +31,20 @@ Core Availability unit tests cover end-exclusive overlap, containment, exact ove
 
 # Digital estimate approval coverage
 
-`tests/estimate-approval.test.ts` covers token shape/hash-only persistence, the named expiry policy, and public DTO field stripping. `supabase/tests/customer_digital_estimate_approval.sql` covers creation, one-active-link replacement, anonymous allowlisting, no broad table access, invalid/expired/revoked/superseded states, approve/decline, idempotent retries, first-decision-wins behavior, revision invalidation, audit privacy, branch restriction, and cross-tenant denial.
+`tests/estimate-approval.test.ts` covers token shape, hash-only public validation, encrypted delivery-secret handling, the named expiry policy, and public DTO field stripping. `supabase/tests/customer_digital_estimate_approval.sql` covers creation, one-active-link replacement, anonymous allowlisting, no broad table access, invalid/expired/revoked/superseded states, approve/decline, idempotent retries, first-decision-wins behavior, revision invalidation, audit privacy, branch restriction, and cross-tenant denial.
+
+# Notification outbox coverage
+
+`tests/notifications.test.ts` covers email and Philippine-mobile normalization, current opt-out enforcement, AES-GCM delivery-secret protection, Automotive template injection, deterministic provider idempotency keys, accepted sends, retry/permanent failure, maximum-attempt behavior, production-safe provider selection, and cron bearer authentication. Providers are injected mocks; unit tests never contact a real delivery service.
+
+`supabase/tests/notification_outbox.sql` covers transactional multi-channel enqueue, payload/token privacy, strict table grants, normalized destination snapshots, atomic claims, concurrent-claim denial, provider attempt accounting, future retry, stale-lease recovery, idempotent near-expiry reminders, approval cancellation, secret destruction, explicit opt-out, authorized manual retry, browser worker denial, and cross-tenant status denial.
+
+# Vehicle maintenance coverage
+
+Vehicle maintenance validation covers completion idempotency, approved-item-only snapshots, monotonic odometer behavior, one active projection per vehicle/service, interval snapshots, cross-tenant and branch denial, dismissal authorization, stage/channel notification deduplication, consent-ineligible rows, and cancellation after satisfaction. Database tests run only against a local or disposable Supabase database; the bounded historical backfill is never invoked by a migration.
+
+`tests/maintenance-lifecycle.test.ts` covers established active appointment statuses, suppression precedence, snooze expiry, sent-stage preservation, legacy notification pausing, dry-run repository isolation, and the production apply guard. Scheduling unit tests verify that `maintenanceDueId` remains Automotive-only and an existing active link bypasses duplicate persistence.
+
+`supabase/tests/maintenance_rebooking_backfill.sql` covers atomic create/link, duplicate-create idempotency, reschedule preservation, active appointment suppression, cancellation recovery, snooze/resume/audit, matching versus unrelated completed services, stage/channel deduplication, cross-tenant direct-mutation denial, zero-write dry-run planning, warning codes, explicit apply, no-notification backfill, and apply rerun idempotency. Run only after a fresh local migration apply.
+
+`tests/parts-reservation.test.ts` covers the Core external-reference contract, Automotive adapter composition, reserve/consume/release delegation, and numeric precision validation. `supabase/tests/parts_reservation_consumption.sql` covers derived availability, full and partial allocation, insufficient-stock protection, idempotent retries and conflict detection, start gating, partial/over consumption, release semantics, cancellation and estimate-revision cleanup, actual-parts history, direct-write denial, tenant isolation, branch restrictions, and balance-helper disclosure protection. Concurrency safety is enforced by the inventory-item row lock; validation should also issue simultaneous final-unit reservation calls against a disposable database.

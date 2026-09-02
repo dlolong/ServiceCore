@@ -1,8 +1,12 @@
 # ServiceCore — Codex Implementation Phases
 
+## KarKR operational checkpoint — Idempotent Estimate Approval Delivery
+
+Estimate approval now creates its private link and separate Email/SMS notification intents in one PostgreSQL transaction. Shared Core Notifications provides explicit eligibility, destination snapshots, deterministic deduplication, `SKIP LOCKED` claims, stale-lease recovery, bounded retry, terminal failure, manual retry, and protected cron processing. Automotive owns estimate templates and one idempotent near-expiry reminder per eligible channel. Raw tokens stay out of outbox payloads/logs/audit, and manual Copy Link continues working with providers disabled.
+
 ## KarKR operational checkpoint — Customer Digital Estimate Approval
 
-Advisors can now generate, copy, replace, and explicitly revoke a private seven-day approval link for the current estimate. Customers review an allowlisted, mobile-first estimate page without an account and approve or decline through the existing authorization model. Only a SHA-256 token hash is stored; anonymous table access is denied; estimate revisions supersede links; and the transactional decision boundary provides idempotent first-decision-wins behavior with audit events.
+Advisors can now generate, copy, replace, and explicitly revoke a private seven-day approval link for the current estimate. Customers review an allowlisted, mobile-first estimate page without an account and approve or decline through the existing authorization model. Public validation stores only a SHA-256 token hash; the notification phase adds a separate encrypted expiring delivery secret with service-role-only access. Anonymous table access is denied, estimate revisions supersede links, and the transactional decision boundary provides idempotent first-decision-wins behavior with audit events.
 
 ## KarKR operational checkpoint — Service Advisor Workflow
 
@@ -414,7 +418,7 @@ Implement Phase 15 KarKR AI Service Advisor as human-reviewed drafting assistanc
 
 ---
 
-## Phase 16 — Notifications and operational automations
+## Phase 16 — Notifications and operational automations (in progress)
 **Goal:** reduce missed appointments and manual follow-ups.
 
 **Build**
@@ -427,6 +431,10 @@ Implement Phase 15 KarKR AI Service Advisor as human-reviewed drafting assistanc
 - maintenance due reminder;
 - retry/backoff/dead-letter handling;
 - templates per organization while preserving mandatory compliance text.
+
+The estimate-approval and vehicle-maintenance delivery slices are complete. Maintenance is driven by immutable completed-work snapshots and stage/channel-deduplicated intents in the shared outbox. Maintenance due now links explicitly to an appointment through the Automotive Scheduling Adapter; active links and snoozes suppress reminders without changing the due lifecycle, while exact matching completed services satisfy the cycle and create the next projection. The legacy Job Order planner defaults to zero-write dry-run, and explicit bounded apply creates notification-disabled, traceable records idempotently. Appointment confirmation/rescheduling, vehicle-ready, overdue-balance, and organization-customized templates remain future slices and should reuse the same outbox rather than add another queue.
+
+KarKR Parts Reservation + Consumption now secures authorized estimate/service-recipe requirements through a generic Core Inventory allocation ledger. On hand remains movement-derived; available subtracts active reservation remainder. Atomic row locks prevent over-reservation, operation keys make retries safe, start-work requires reservation coverage, and lifecycle cleanup releases unused quantities without creating physical stock. Actual consumption alone reaches the movement ledger and consumed-parts Service History snapshot.
 
 **Codex prompt**
 ```text

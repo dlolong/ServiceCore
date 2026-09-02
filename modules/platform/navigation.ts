@@ -18,7 +18,7 @@ export const karkrNavigation = [
   { key: "bookings", label: "Booking Requests", href: "/dashboard/bookings", industryFeature: "appointments", permission: "appointments.manage" },
   { key: "services", label: "Services", href: "/dashboard/services", permission: "services.manage" },
   { key: "inventory", label: "Inventory", href: "/dashboard/inventory", industryFeature: "inventory", permission: "inventory.manage" },
-  { key: "reminders", label: "Reminders", href: "/dashboard/reminders", subscriptionFeature: "reminders" },
+  { key: "reminders", label: "Maintenance", href: "/dashboard/reminders", subscriptionFeature: "reminders" },
   { key: "reports", label: "Reports", href: "/dashboard/reports", subscriptionFeature: "advanced_reports", permission: "reports.view" },
   { key: "settings", label: "Settings", href: "/dashboard/settings", permission: "settings.manage" },
 ] as const satisfies readonly NavigationItem[];

@@ -97,7 +97,7 @@ async function resolveVisitEntities(data:FormData,organizationId:string,back:str
 }
 
 export async function saveAppointment(data:FormData) {
-  const appointmentId=formValue(data,"appointmentId"),back=appointmentId?`/dashboard/appointments/${appointmentId}/edit`:"/dashboard/appointments/new";
+  const appointmentId=formValue(data,"appointmentId"),maintenanceDueId=formValue(data,"maintenanceDueId"),back=appointmentId?`/dashboard/appointments/${appointmentId}/edit`:maintenanceDueId?`/dashboard/appointments/new?maintenanceDueId=${encodeURIComponent(maintenanceDueId)}`:"/dashboard/appointments/new";
   const {activeMembership}=await getDashboardContext(); if(!operator(activeMembership.role)) go("/dashboard/appointments","error","You have read-only access.");
   const branchId=formValue(data,"branchId"),startsAt=formValue(data,"startsAt"),branch=activeMembership.branches.find(candidate=>candidate.id===branchId);
   if(!branch) go(back,"error","Select an active branch in this organization.");
@@ -106,7 +106,7 @@ export async function saveAppointment(data:FormData) {
   const resolved=await resolveVisitEntities(data,activeMembership.organizationId,back);
   let saved:string;
   try {
-    saved=await saveAutomotiveAppointment({appointmentId:appointmentId||null,organizationId:activeMembership.organizationId,branchId,customerId:resolved.customerId,vehicleId:resolved.vehicleId,serviceIds:selectedValues(data,"serviceIds"),staffAssignments:selectedValues(data,"staffIds").map(staffId=>({staffId})),resourceAssignments:selectedValues(data,"resourceIds").map(resourceId=>({resourceId})),scheduledStart:utc.toISOString(),allowAppointmentConflict:data.get("acceptConflict")==="on",customerNote:formValue(data,"customerNote")||null,internalNote:formValue(data,"internalNote")||null});
+    saved=await saveAutomotiveAppointment({appointmentId:appointmentId||null,maintenanceDueId:maintenanceDueId||null,organizationId:activeMembership.organizationId,branchId,customerId:resolved.customerId,vehicleId:resolved.vehicleId,serviceIds:selectedValues(data,"serviceIds"),staffAssignments:selectedValues(data,"staffIds").map(staffId=>({staffId})),resourceAssignments:selectedValues(data,"resourceIds").map(resourceId=>({resourceId})),scheduledStart:utc.toISOString(),allowAppointmentConflict:data.get("acceptConflict")==="on",customerNote:formValue(data,"customerNote")||null,internalNote:formValue(data,"internalNote")||null});
   } catch(error) {
     go(back,"error",error instanceof Error?error.message:"Unable to save appointment.");
   }
