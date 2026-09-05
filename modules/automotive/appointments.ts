@@ -1,3 +1,5 @@
+import { verticalBrands } from "@/modules/platform/brand";
+
 export type AppointmentVehicleSummary = {
   make: string | null;
   model: string | null;
@@ -5,7 +7,7 @@ export type AppointmentVehicleSummary = {
 };
 
 export function requireAutomotiveAppointmentVehicle(vehicleId: string | null | undefined) {
-  if (!vehicleId) throw new Error("A vehicle is required for this KarKR automotive workflow.");
+  if (!vehicleId) throw new Error(`A vehicle is required for this ${verticalBrands.automotive.displayName} workflow.`);
   return vehicleId;
 }
 

@@ -1,3 +1,12 @@
 import Link from "next/link";
+
 import { CustomerForm } from "@/components/crm-forms";
-export default async function Page({searchParams}:{searchParams:Promise<{error?:string;warning?:string;duplicateId?:string}>}){const p=await searchParams;return <div className="mx-auto max-w-3xl"><div className="flex flex-wrap items-end justify-between gap-4"><div><p className="text-sm font-bold text-amber-700">Customers</p><h1 className="mt-1 text-3xl font-black">Add customer</h1><p className="mt-2 text-zinc-600">Keep the common path fast; contact and address details are optional.</p></div><Link className="text-sm font-bold text-amber-800 underline" href="/dashboard/customers/import">Preview a CSV import</Link></div><div className="mt-6"><CustomerForm {...p}/></div></div>}
+import { PageHeader } from "@/components/page-patterns";
+
+export default async function Page({ searchParams }: { searchParams: Promise<{ error?: string; warning?: string; duplicateId?: string }> }) {
+  const parameters = await searchParams;
+  return <main id="customer-create-page" className="mx-auto min-w-0 max-w-3xl">
+    <PageHeader id="customer-create-page-header" eyebrow="Customers" title="Add customer" description="Keep the common path fast; contact and address details are optional." action={<Link id="customer-import-link" className="text-sm font-bold text-brand-primary-strong underline underline-offset-4" href="/dashboard/customers/import">Preview a CSV import</Link>}/>
+    <section id="customer-create-section" className="mt-5"><CustomerForm {...parameters}/></section>
+  </main>;
+}

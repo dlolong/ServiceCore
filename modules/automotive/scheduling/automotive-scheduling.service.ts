@@ -3,9 +3,10 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { requireAutomotiveAppointmentVehicle } from "@/modules/automotive/appointments";
 import { saveAppointmentWithPersistence, type SaveAppointmentInput, type SchedulingServiceDependencies } from "@/modules/core/scheduling/scheduling.service";
+import { verticalBrands } from "@/modules/platform/brand";
 
 const automotiveAppointmentSchema = z.object({
-  vehicleId: z.uuid({ error: "A vehicle is required for this KarKR booking." }),
+  vehicleId: z.uuid({ error: `A vehicle is required for this ${verticalBrands.automotive.displayName} booking.` }),
   maintenanceDueId: z.uuid().nullable().optional(),
 });
 
@@ -52,7 +53,7 @@ export async function saveAutomotiveAppointment(
 ) {
   const vehicleId = requireAutomotiveAppointmentVehicle(input.vehicleId);
   const vehicleResult = automotiveAppointmentSchema.safeParse({ vehicleId,maintenanceDueId:input.maintenanceDueId??null });
-  if (!vehicleResult.success) throw new AutomotiveSchedulingError(vehicleResult.error.issues[0]?.message ?? "A vehicle is required for this KarKR booking.");
+  if (!vehicleResult.success) throw new AutomotiveSchedulingError(vehicleResult.error.issues[0]?.message ?? `A vehicle is required for this ${verticalBrands.automotive.displayName} booking.`);
 
   await dependencies.validateVehicle(input.organizationId, input.customerId, vehicleResult.data.vehicleId);
   const maintenanceDueId=vehicleResult.data.maintenanceDueId??null;

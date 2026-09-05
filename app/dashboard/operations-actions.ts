@@ -7,7 +7,7 @@ import { getDashboardContext } from "@/lib/auth/context";
 import { firstError, formValue, normalizePlate } from "@/lib/crm";
 import { categorySchema, parseMoneyToCentavos, selectedValues, serviceSchema, walkInSchema, zonedDateTimeToUtc } from "@/lib/operations";
 import { createClient } from "@/lib/supabase/server";
-import { saveAutomotiveAppointment } from "@/modules/automotive/scheduling/automotive-scheduling.service";
+import { assertIndustryFeature } from "@/lib/auth/industry-access";
 
 function go(path:string,kind:"error"|"message",value:string):never { redirect(`${path}?${kind}=${encodeURIComponent(value)}`); }
 const admin=(role:string)=>["owner","manager"].includes(role);
@@ -49,13 +49,13 @@ export async function saveService(data:FormData) {
   const id=formValue(data,"id"),back=id?`/dashboard/services/${id}/edit`:"/dashboard/services/new";
   const parsed=serviceSchema.safeParse({name:formValue(data,"name"),categoryId:formValue(data,"categoryId"),description:formValue(data,"description"),shortDescription:formValue(data,"shortDescription"),code:formValue(data,"code"),durationMinutes:formValue(data,"durationMinutes"),basePrice:formValue(data,"basePrice"),isAddOn:data.get("isAddOn")==="on",parentServiceId:formValue(data,"parentServiceId")});
   if(!parsed.success) go(back,"error",firstError(parsed.error));
-  const base=parseMoneyToCentavos(parsed.data.basePrice),orgPrices=parsePriceLines(formValue(data,"vehiclePrices"));
+  const {activeMembership}=await getDashboardContext(); if(!admin(activeMembership.role)) go("/dashboard/services","error","Owner or manager access is required.");
+  const automotive=activeMembership.industry==="automotive",base=parseMoneyToCentavos(parsed.data.basePrice),orgPrices=automotive?parsePriceLines(formValue(data,"vehiclePrices")):[];
   if(base===null||base>100000000000n) go(back,"error","Enter a valid nonnegative base price with at most two decimals.");
   if(!orgPrices) go(back,"error","Vehicle prices must use one class=price per line.");
-  const {activeMembership}=await getDashboardContext(); if(!admin(activeMembership.role)) go("/dashboard/services","error","Owner or manager access is required.");
   const branchPriceRows:{branch_id:string;vehicle_class:string|null;price_centavos:number}[]=[];
   for(const branch of activeMembership.branches) {
-    const branchBase=formValue(data,`branchBasePrice:${branch.id}`),vehicleRows=parsePriceLines(formValue(data,`branchVehiclePrices:${branch.id}`));
+    const branchBase=formValue(data,`branchBasePrice:${branch.id}`),vehicleRows=automotive?parsePriceLines(formValue(data,`branchVehiclePrices:${branch.id}`)):[];
     if(vehicleRows===null) go(back,"error",`${branch.name} vehicle prices are invalid.`);
     if(branchBase) { const amount=parseMoneyToCentavos(branchBase); if(amount===null||amount>100000000000n) go(back,"error",`${branch.name} base price is invalid.`); branchPriceRows.push({branch_id:branch.id,vehicle_class:null,price_centavos:Number(amount)}); }
     branchPriceRows.push(...vehicleRows.map(row=>({...row,branch_id:branch.id})));
@@ -79,18 +79,22 @@ export async function toggleService(data:FormData) {
 }
 
 const quickSchema=z.object({customerName:z.string().trim().max(200),customerPhone:z.string().trim().max(50),customerEmail:z.union([z.literal(""),z.email()]),vehicleMake:z.string().trim().max(100),vehicleModel:z.string().trim().max(100),vehiclePlate:z.string().trim().max(30),vehicleType:z.string().trim().max(100)});
-async function resolveVisitEntities(data:FormData,organizationId:string,back:string) {
+const quickCustomerSchema=quickSchema.pick({customerName:true,customerPhone:true,customerEmail:true});
+async function resolveVisitEntities(data:FormData,organizationId:string,back:string,includeVehicle=true) {
   const supabase=await createClient(); let customerId=formValue(data,"customerId"),vehicleId=formValue(data,"vehicleId");
-  const quick=quickSchema.safeParse({customerName:formValue(data,"quickCustomerName"),customerPhone:formValue(data,"quickCustomerPhone"),customerEmail:formValue(data,"quickCustomerEmail"),vehicleMake:formValue(data,"quickVehicleMake"),vehicleModel:formValue(data,"quickVehicleModel"),vehiclePlate:formValue(data,"quickVehiclePlate"),vehicleType:formValue(data,"quickVehicleType")});
-  if(!quick.success) go(back,"error","Check the quick customer and vehicle details.");
-  if(quick.data.customerName) {
-    if(quick.data.customerName.length<2) go(back,"error","Quick customer name must contain at least two characters.");
-    const {data:created,error}=await supabase.from("customers").insert({organization_id:organizationId,full_name:quick.data.customerName,phone:quick.data.customerPhone||null,email:quick.data.customerEmail||null}).select("id").single();
+  const submitted={customerName:formValue(data,"quickCustomerName"),customerPhone:formValue(data,"quickCustomerPhone"),customerEmail:formValue(data,"quickCustomerEmail"),vehicleMake:formValue(data,"quickVehicleMake"),vehicleModel:formValue(data,"quickVehicleModel"),vehiclePlate:formValue(data,"quickVehiclePlate"),vehicleType:formValue(data,"quickVehicleType")};
+  const customer=quickCustomerSchema.safeParse(submitted);
+  if(!customer.success) go(back,"error",includeVehicle?"Check the quick customer and vehicle details.":"Check the quick client details.");
+  if(customer.data.customerName) {
+    if(customer.data.customerName.length<2) go(back,"error",includeVehicle?"Quick customer name must contain at least two characters.":"Quick client name must contain at least two characters.");
+    const {data:created,error}=await supabase.from("customers").insert({organization_id:organizationId,full_name:customer.data.customerName,phone:customer.data.customerPhone||null,email:customer.data.customerEmail||null}).select("id").single();
     if(error||!created) go(back,"error","Unable to create the customer."); customerId=created.id;
   }
-  if(quick.data.vehicleMake||quick.data.vehicleModel) {
-    if(!customerId||quick.data.vehicleMake.length<2||quick.data.vehicleModel.length<1) go(back,"error","Select/create a customer and enter the vehicle make and model.");
-    const {data:created,error}=await supabase.from("vehicles").insert({organization_id:organizationId,customer_id:customerId,make:quick.data.vehicleMake,model:quick.data.vehicleModel,plate_number:quick.data.vehiclePlate||null,plate_normalized:quick.data.vehiclePlate?normalizePlate(quick.data.vehiclePlate):null,vehicle_type:quick.data.vehicleType||null}).select("id").single();
+  const automotive=includeVehicle?quickSchema.safeParse(submitted):null;
+  if(includeVehicle&&!automotive?.success) go(back,"error","Check the quick customer and vehicle details.");
+  if(automotive?.success&&(automotive.data.vehicleMake||automotive.data.vehicleModel)) {
+    if(!customerId||automotive.data.vehicleMake.length<2||automotive.data.vehicleModel.length<1) go(back,"error","Select/create a customer and enter the vehicle make and model.");
+    const {data:created,error}=await supabase.from("vehicles").insert({organization_id:organizationId,customer_id:customerId,make:automotive.data.vehicleMake,model:automotive.data.vehicleModel,plate_number:automotive.data.vehiclePlate||null,plate_normalized:automotive.data.vehiclePlate?normalizePlate(automotive.data.vehiclePlate):null,vehicle_type:automotive.data.vehicleType||null}).select("id").single();
     if(error||!created) go(back,"error","Unable to create the vehicle."); vehicleId=created.id;
   }
   return {customerId,vehicleId};
@@ -103,17 +107,19 @@ export async function saveAppointment(data:FormData) {
   if(!branch) go(back,"error","Select an active branch in this organization.");
   const supabase=await createClient(),{data:branchRow}=await supabase.from("branches").select("timezone").eq("id",branch.id).single(),utc=zonedDateTimeToUtc(startsAt,branchRow?.timezone??activeMembership.timezone);
   if(!utc) go(back,"error","Enter a valid appointment date and time.");
-  const resolved=await resolveVisitEntities(data,activeMembership.organizationId,back);
-  let saved:string;
+  const automotive=activeMembership.industry==="automotive",resolved=await resolveVisitEntities(data,activeMembership.organizationId,back,automotive);
+  let saved:string,customerLink="",linkMessage="";
   try {
-    saved=await saveAutomotiveAppointment({appointmentId:appointmentId||null,maintenanceDueId:maintenanceDueId||null,organizationId:activeMembership.organizationId,branchId,customerId:resolved.customerId,vehicleId:resolved.vehicleId,serviceIds:selectedValues(data,"serviceIds"),staffAssignments:selectedValues(data,"staffIds").map(staffId=>({staffId})),resourceAssignments:selectedValues(data,"resourceIds").map(resourceId=>({resourceId})),scheduledStart:utc.toISOString(),allowAppointmentConflict:data.get("acceptConflict")==="on",customerNote:formValue(data,"customerNote")||null,internalNote:formValue(data,"internalNote")||null});
+    const coreInput={appointmentId:appointmentId||null,organizationId:activeMembership.organizationId,branchId,customerId:resolved.customerId,serviceIds:selectedValues(data,"serviceIds"),staffAssignments:selectedValues(data,"staffIds").map(staffId=>({staffId})),resourceAssignments:selectedValues(data,"resourceIds").map(resourceId=>({resourceId})),scheduledStart:utc.toISOString(),allowAppointmentConflict:data.get("acceptConflict")==="on",customerNote:formValue(data,"customerNote")||null,internalNote:formValue(data,"internalNote")||null};
+    if(automotive){const{saveAutomotiveAppointment}=await import("@/modules/automotive/scheduling/automotive-scheduling.service");saved=await saveAutomotiveAppointment({...coreInput,maintenanceDueId:maintenanceDueId||null,vehicleId:resolved.vehicleId});}
+    else{const{saveAppointment:saveCoreAppointment}=await import("@/modules/core/scheduling/scheduling.service");saved=await saveCoreAppointment(coreInput);if(!appointmentId){try{const{createAppointmentSelfServiceLink}=await import("@/modules/core/scheduling/appointment-self-service.runtime");const link=await createAppointmentSelfServiceLink({appointmentId:saved,expiresAt:new Date(Date.now()+30*86_400_000).toISOString()});customerLink=`/appointment/${link.token}`;linkMessage=link.deliveryEnabled?" Customer self-service and reminders are enabled.":" Customer link created; delivery encryption is not configured.";}catch{linkMessage=" The appointment was saved, but its customer link could not be created.";}}}
   } catch(error) {
     go(back,"error",error instanceof Error?error.message:"Unable to save appointment.");
   }
-  revalidatePath("/dashboard/appointments"); redirect(`/dashboard/appointments/${saved}?message=${encodeURIComponent(`Appointment ${appointmentId?"updated":"booked"}.`)}`);
+  revalidatePath("/dashboard/appointments"); const next=new URLSearchParams({message:`Appointment ${appointmentId?"updated":"booked"}.${linkMessage}`});if(customerLink)next.set("customerLink",customerLink);redirect(`/dashboard/appointments/${saved}?${next}`);
 }
 
 export async function transitionAppointment(data:FormData){const id=formValue(data,"id"),supabase=await createClient();const{error}=await supabase.rpc("transition_appointment",{p_appointment_id:id,p_action:formValue(data,"action"),p_reason:formValue(data,"reason")||null});if(error)go(`/dashboard/appointments/${id}`,"error","That appointment transition is not allowed.");revalidatePath("/dashboard");go(`/dashboard/appointments/${id}`,"message","Appointment updated.");}
-export async function enqueueAppointment(data:FormData){const id=formValue(data,"id"),supabase=await createClient();const{error}=await supabase.rpc("enqueue_appointment",{p_appointment_id:id});if(error)go(`/dashboard/appointments/${id}`,"error",error.code==="23505"?"This appointment is already in the queue.":error.message);revalidatePath("/dashboard");redirect("/dashboard/queue?message=Appointment+added+to+queue.");}
-export async function createWalkIn(data:FormData){const back="/dashboard/queue/new",{activeMembership}=await getDashboardContext();if(!operator(activeMembership.role))go("/dashboard/queue","error","You have read-only access.");const resolved=await resolveVisitEntities(data,activeMembership.organizationId,back);const parsed=walkInSchema.safeParse({branchId:formValue(data,"branchId"),customerId:resolved.customerId,vehicleId:resolved.vehicleId,serviceIds:selectedValues(data,"serviceIds"),notes:formValue(data,"notes")});if(!parsed.success)go(back,"error",firstError(parsed.error));if(!activeMembership.branches.some(branch=>branch.id===parsed.data.branchId))go(back,"error","Select an active branch in this organization.");const supabase=await createClient();const{error}=await supabase.rpc("create_walk_in",{p_branch_id:parsed.data.branchId,p_customer_id:parsed.data.customerId,p_vehicle_id:parsed.data.vehicleId,p_service_ids:parsed.data.serviceIds,p_notes:parsed.data.notes});if(error)go(back,"error",error.message);revalidatePath("/dashboard");redirect("/dashboard/queue?message=Walk-in+added+to+queue.");}
-export async function transitionQueue(data:FormData){const supabase=await createClient();const{error}=await supabase.rpc("transition_queue_entry",{p_queue_id:formValue(data,"id"),p_status:formValue(data,"status")});if(error)go("/dashboard/queue","error","That queue transition is not allowed.");revalidatePath("/dashboard");go("/dashboard/queue","message","Queue updated.");}
+export async function enqueueAppointment(data:FormData){const id=formValue(data,"id"),{activeMembership}=await getDashboardContext();assertIndustryFeature(activeMembership,"queue");const supabase=await createClient();const{error}=await supabase.rpc("enqueue_appointment",{p_appointment_id:id});if(error)go(`/dashboard/appointments/${id}`,"error",error.code==="23505"?"This appointment is already in the queue.":error.message);revalidatePath("/dashboard");redirect("/dashboard/queue?message=Appointment+added+to+queue.");}
+export async function createWalkIn(data:FormData){const back="/dashboard/queue/new",{activeMembership}=await getDashboardContext();assertIndustryFeature(activeMembership,"queue");if(!operator(activeMembership.role))go("/dashboard/queue","error","You have read-only access.");const resolved=await resolveVisitEntities(data,activeMembership.organizationId,back);const parsed=walkInSchema.safeParse({branchId:formValue(data,"branchId"),customerId:resolved.customerId,vehicleId:resolved.vehicleId,serviceIds:selectedValues(data,"serviceIds"),notes:formValue(data,"notes")});if(!parsed.success)go(back,"error",firstError(parsed.error));if(!activeMembership.branches.some(branch=>branch.id===parsed.data.branchId))go(back,"error","Select an active branch in this organization.");const supabase=await createClient();const{error}=await supabase.rpc("create_walk_in",{p_branch_id:parsed.data.branchId,p_customer_id:parsed.data.customerId,p_vehicle_id:parsed.data.vehicleId,p_service_ids:parsed.data.serviceIds,p_notes:parsed.data.notes});if(error)go(back,"error",error.message);revalidatePath("/dashboard");redirect("/dashboard/queue?message=Walk-in+added+to+queue.");}
+export async function transitionQueue(data:FormData){const{activeMembership}=await getDashboardContext();assertIndustryFeature(activeMembership,"queue");const supabase=await createClient();const{error}=await supabase.rpc("transition_queue_entry",{p_queue_id:formValue(data,"id"),p_status:formValue(data,"status")});if(error)go("/dashboard/queue","error","That queue transition is not allowed.");revalidatePath("/dashboard");go("/dashboard/queue","message","Queue updated.");}

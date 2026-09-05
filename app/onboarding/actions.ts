@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { ACTIVE_ORGANIZATION_COOKIE, requireAuthenticatedUser } from "@/lib/auth/context";
+import { createFirstOrganizationWithCompatibility } from "@/lib/auth/organization-onboarding";
 import { branchOnboardingSchema, businessOnboardingSchema, firstIssue } from "@/lib/auth/schemas";
 
 function value(formData: FormData, key: string) {
@@ -19,8 +20,15 @@ const activeOrganizationCookieOptions = {
   maxAge: 60 * 60 * 24 * 365,
 };
 
+function organizationCreationErrorMessage(errorCode: string | null) {
+  if (errorCode === "P0001") return "This account has already started business setup.";
+  if (errorCode === "ONBOARDING_SCHEMA_OUTDATED") return "Salon & Beauty setup is temporarily unavailable while the database is being updated.";
+  return "Unable to create the business. Check the details and try again.";
+}
+
 export async function createOrganization(formData: FormData) {
   const parsed = businessOnboardingSchema.safeParse({
+    industry: value(formData, "industry"),
     businessName: value(formData, "businessName"),
     businessType: value(formData, "businessType"),
     slug: value(formData, "slug"),
@@ -33,25 +41,19 @@ export async function createOrganization(formData: FormData) {
   if (!parsed.success) redirect(`/onboarding/business?error=${encodeURIComponent(firstIssue(parsed.error))}`);
 
   const { supabase } = await requireAuthenticatedUser("/onboarding/business");
-  const { data, error } = await supabase.rpc("create_first_organization", {
-    p_name: parsed.data.businessName,
-    p_business_type: parsed.data.businessType,
-    p_slug_base: parsed.data.slug,
-    p_legal_name: parsed.data.legalName || null,
-    p_phone: parsed.data.phone || null,
-    p_email: parsed.data.email || null,
-    p_website: parsed.data.website || null,
-    p_facebook_page: parsed.data.facebookPage || null,
-  });
+  const result = await createFirstOrganizationWithCompatibility(
+    (parameters) => supabase.rpc("create_first_organization", parameters),
+    parsed.data,
+  );
 
-  if (error || typeof data !== "string") {
-    console.error("Organization onboarding failed", { code: error?.code });
-    const message = error?.code === "P0001" ? "This account has already started shop setup." : "Unable to create the business. Check the details and try again.";
+  if (!result.organizationId) {
+    console.error("Organization onboarding failed", { code: result.errorCode });
+    const message = organizationCreationErrorMessage(result.errorCode);
     redirect(`/onboarding/business?error=${encodeURIComponent(message)}`);
   }
 
   const cookieStore = await cookies();
-  cookieStore.set(ACTIVE_ORGANIZATION_COOKIE, data, activeOrganizationCookieOptions);
+  cookieStore.set(ACTIVE_ORGANIZATION_COOKIE, result.organizationId, activeOrganizationCookieOptions);
   redirect("/onboarding/branch");
 }
 
@@ -88,9 +90,10 @@ export async function createInitialBranch(formData: FormData) {
 
   if (error || typeof data !== "string") {
     console.error("Initial branch onboarding failed", { code: error?.code });
+    if (error?.code === "P0001") redirect("/onboarding/setup");
     const message = error?.code === "42501" ? "You are not authorized to create this branch." : "Unable to create the branch. Check the details and try again.";
     redirect(`/onboarding/branch?error=${encodeURIComponent(message)}`);
   }
 
-  redirect("/dashboard");
+  redirect("/onboarding/setup");
 }

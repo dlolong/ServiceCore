@@ -1,6 +1,6 @@
 import "server-only";
 
-import { getDashboardContext } from "@/lib/auth/context";
+import { requireAutomotiveContext as getDashboardContext } from "@/lib/auth/industry-access";
 import { createClient } from "@/lib/supabase/server";
 import {
   assertJobOrderTransitionAllowed,
@@ -16,10 +16,10 @@ function persistenceError(error: { message: string } | null, fallback: string): 
 }
 
 export const automotiveJobOrderPersistence: JobOrderPersistence = {
-  async createFromQueue(queueId, copyScheduledStaff, scheduledStaffMembershipId) {
+  async createFromQueue(queueId, copyScheduledStaff, scheduledStaffId) {
     await getDashboardContext();
     const supabase = await createClient();
-    const { data: jobOrderId, error } = await supabase.rpc("convert_queue_to_job_with_scheduled_staff", { p_queue_id: queueId, p_copy_scheduled_staff: copyScheduledStaff, p_scheduled_staff_membership_id: scheduledStaffMembershipId });
+    const { data: jobOrderId, error } = await supabase.rpc("convert_queue_to_job_with_scheduled_staff_profile", { p_queue_id: queueId, p_copy_scheduled_staff: copyScheduledStaff, p_scheduled_staff_id: scheduledStaffId });
     if (error || !jobOrderId) persistenceError(error, "Unable to create job order.");
     return jobOrderId;
   },
@@ -32,16 +32,16 @@ export const automotiveJobOrderPersistence: JobOrderPersistence = {
     const { error } = await supabase.rpc("transition_job", { p_job_id: jobOrderId, p_action: action });
     if (error) persistenceError(error, "Unable to update job order status.");
   },
-  async assignTechnician(jobOrderId, technicianId, promisedAt) {
+  async assignTechnician(jobOrderId, staffId, promisedAt) {
     await getDashboardContext();
     const supabase = await createClient();
-    const { error } = await supabase.rpc("assign_job", { p_job_id: jobOrderId, p_technician_id: technicianId, p_promised_at: promisedAt });
+    const { error } = await supabase.rpc("assign_job_staff", { p_job_id: jobOrderId, p_staff_id: staffId, p_promised_at: promisedAt });
     if (error) persistenceError(error, "Unable to assign technician.");
   },
-  async assignItemTechnician(itemId, technicianId) {
+  async assignItemTechnician(itemId, staffId) {
     await getDashboardContext();
     const supabase = await createClient();
-    const { error } = await supabase.rpc("assign_job_item", { p_item_id: itemId, p_technician_id: technicianId });
+    const { error } = await supabase.rpc("assign_job_item_staff", { p_item_id: itemId, p_staff_id: staffId });
     if (error) persistenceError(error, "Unable to assign service technician.");
   },
   async addService(input) {

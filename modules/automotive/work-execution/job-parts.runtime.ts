@@ -1,6 +1,6 @@
 import "server-only";
 
-import { getDashboardContext } from "@/lib/auth/context";
+import { requireAutomotiveContext as getDashboardContext } from "@/lib/auth/industry-access";
 import { createClient } from "@/lib/supabase/server";
 import {
   AutomotiveJobPartsError,

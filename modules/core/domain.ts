@@ -52,7 +52,7 @@ export type Appointment = {
   customerId: string;
   startsAt: string;
   endsAt: string | null;
-  status: "requested" | "confirmed" | "checked_in" | "queued" | "completed" | "cancelled" | "no_show";
+  status: "requested" | "confirmed" | "checked_in" | "in_service" | "queued" | "completed" | "cancelled" | "no_show";
 };
 
 export type Product = {

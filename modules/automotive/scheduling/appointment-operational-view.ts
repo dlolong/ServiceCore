@@ -12,17 +12,16 @@ export async function loadKarKRAppointmentAssignmentContext(organizationId: stri
 
   const supabase = await createClient();
   const [{ data: staffAssignments }, { data: resourceAssignments }] = await Promise.all([
-    supabase.from("appointment_staff_assignments").select("appointment_id,staff_membership_id,organization_memberships(user_id,role,is_active,profiles(full_name))").eq("organization_id", organizationId).in("appointment_id", appointmentIds),
+    supabase.from("appointment_staff_assignments").select("appointment_id,staff_profile_id,organization_staff_profiles(full_name,is_active)").eq("organization_id", organizationId).in("appointment_id", appointmentIds),
     supabase.from("appointment_resource_assignments").select("appointment_id,resource_id,scheduling_resources(name,resource_type)").eq("organization_id", organizationId).in("appointment_id", appointmentIds),
   ]);
 
   for (const assignment of staffAssignments ?? []) {
-    const membership = Array.isArray(assignment.organization_memberships) ? assignment.organization_memberships[0] : assignment.organization_memberships;
-    const profile = Array.isArray(membership?.profiles) ? membership.profiles[0] : membership?.profiles;
+    const profile = Array.isArray(assignment.organization_staff_profiles) ? assignment.organization_staff_profiles[0] : assignment.organization_staff_profiles;
     empty.get(assignment.appointment_id)?.scheduledStaff.push({
-      id: assignment.staff_membership_id,
+      id: assignment.staff_profile_id,
       displayName: profile?.full_name ?? "Staff member",
-      canInitializeJobOrder: Boolean(membership?.is_active && membership.role === "technician"),
+      canInitializeJobOrder: Boolean(profile?.is_active),
     });
   }
   for (const assignment of resourceAssignments ?? []) {

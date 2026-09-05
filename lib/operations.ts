@@ -24,6 +24,7 @@ export function queueLabel(source: "appointment" | "walk_in", number: number) {
 export function canTransitionAppointment(status: string, action: string) {
   return (action === "confirm" && status === "requested") ||
     (action === "arrive" && ["requested", "confirmed"].includes(status)) ||
+    (action === "complete" && status === "checked_in") ||
     (["cancel", "no_show"].includes(action) && ["requested", "confirmed"].includes(status));
 }
 

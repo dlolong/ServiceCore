@@ -6,6 +6,7 @@ import { SubmitButton } from "@/components/submit-button";
 import { Card } from "@/components/ui/card";
 import { getDashboardContext } from "@/lib/auth/context";
 import { createClient } from "@/lib/supabase/server";
+import { productBrand } from "@/modules/platform/brand";
 
 export default async function CustomerCommunicationPreferencesPage({
   params,searchParams,
@@ -19,9 +20,9 @@ export default async function CustomerCommunicationPreferencesPage({
   ]);
   if(!customer)notFound();
   return <main id="customer-communication-preferences-page" className="mx-auto max-w-xl">
-    <p className="text-sm font-bold text-amber-700">Customer consent</p>
+    <p className="text-sm font-bold text-brand-primary">Customer consent</p>
     <h1 className="text-3xl font-black">{customer.full_name}</h1>
-    <p className="mt-2 text-zinc-600">Choose which transactional service updates KarKR may send to this customer.</p>
+    <p className="mt-2 text-zinc-600">Choose which transactional service updates {productBrand.name} may send to this customer.</p>
     <FormMessage {...query}/>
     <Card id="customer-communication-preferences-card" className="mt-6 p-5">
       <form id="customer-communication-preferences-form" action={saveCommunicationPreferences} className="space-y-4">

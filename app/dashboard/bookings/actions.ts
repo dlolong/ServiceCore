@@ -1,3 +1,4 @@
 "use server";
-import{redirect}from"next/navigation";import{formValue}from"@/lib/crm";import{createClient}from"@/lib/supabase/server";
+import{redirect}from"next/navigation";import{formValue}from"@/lib/crm";import{requireAutomotiveContext}from"@/lib/auth/industry-access";import{createClient as createSupabaseClient}from"@/lib/supabase/server";
+async function createClient(){await requireAutomotiveContext();return createSupabaseClient()}
 export async function reviewBooking(data:FormData){const id=formValue(data,"id"),action=formValue(data,"action"),reason=formValue(data,"reason");if(!/^[0-9a-f-]{36}$/.test(id)||!["confirm","decline"].includes(action))redirect("/dashboard/bookings?error=Invalid+review.");const supabase=await createClient(),{error}=await supabase.rpc("review_public_booking",{p_booking_id:id,p_action:action,p_reason:reason||null});if(error)redirect(`/dashboard/bookings?error=${encodeURIComponent(error.message)}`);redirect(`/dashboard/bookings?message=${action==="confirm"?"Booking confirmed.":"Booking declined."}`)}

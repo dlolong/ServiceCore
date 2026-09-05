@@ -1,5 +1,11 @@
 # Notifications
 
+## Salon appointment reminders
+
+Salon uses `SALON_APPOINTMENT_REMINDER` through the same outbox, consent checks, providers, leases, retry policy, and cron. Salon owns the email/SMS templates; both use Client/Treatment wording, assigned Staff display names, and an encrypted appointment self-service token. The deterministic key includes Appointment, customer-link identity, monotonic schedule revision, and channel. This remains unique across A→B→A reschedules and same-time link replacement. Reschedule cancels old-schedule work, and checked-in/in-service/completed/cancelled/no-show appointments cannot retain pending reminders.
+
+Assigned Staff and Treatment snapshots are also generation inputs. Core scheduling compares normalized pre/post sets after its replacement writes and advances the active link revision exactly once only when final reminder content differs. Notes-only saves and unchanged Staff/Treatment replacements preserve the generation. Trusted direct child mutations retain trigger invalidation. Sent rows remain immutable history; appointment creation before a link has no reminder state to mutate.
+
 KarKR uses a shared, provider-neutral transactional notification outbox. The first implemented notification types are `ESTIMATE_AWAITING_APPROVAL` and `ESTIMATE_APPROVAL_REMINDER`; Email and SMS are independent delivery rows.
 
 ## Flow and ownership
@@ -40,6 +46,19 @@ Statuses are `pending`, `processing`, `sent`, `failed`, and `cancelled`. `sent` 
 The existing `customer_communication_preferences` row is the channel-policy source of truth. This implementation requires explicit `email_opt_in` or `sms_opt_in`, snapshots the normalized address at enqueue, and checks current opt-in again immediately before send. A contact edit does not silently redirect an already queued private link; the snapshot stays authoritative. A current opt-out blocks it.
 
 Missing, invalid, opted-out, disabled, expired, or unavailable-secret channels are cancelled without a provider attempt. Email is trimmed/lowercased and conservatively validated. Philippine mobile forms `09171234567`, `+639171234567`, and `639171234567` normalize to `+639171234567`; ambiguous local/foreign numbers are rejected.
+
+## Staff notification eligibility
+
+Staff contact fields are optional business destinations, not login identifiers. A Staff notification producer must use the same shared channel eligibility function as customer delivery. Email is eligible only when a valid Staff contact email is present; SMS is eligible only when a valid normalized Staff mobile is present. `EMAIL_MISSING` and `SMS_MISSING` are terminal ineligibility results: no provider is called and no retry is scheduled. If both destinations are absent, the Staff profile, scheduling assignment, or work assignment still succeeds. In-app delivery, if introduced later, is available only to Staff linked to an active authenticated membership.
+
+```text
+Staff notification requested
+    ├── valid email present → evaluate Email policy
+    ├── valid mobile present → evaluate SMS policy
+    └── no eligible channel → skip delivery; keep business operation
+```
+
+This phase adds reusable Staff-recipient evaluation, not a new Staff event producer or a second outbox.
 
 ## Approval-link security
 

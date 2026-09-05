@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 
 import { generateEstimateApprovalLinkAction, type ApprovalLinkActionState } from "@/app/dashboard/jobs/advisor-actions";
 import { SubmitButton } from "@/components/submit-button";
+import { productBrand } from "@/modules/platform/brand";
 
 const initialState:ApprovalLinkActionState={};
 
@@ -24,9 +25,9 @@ export function EstimateApprovalLinkControls({jobId,estimateId,replacesActiveLin
   return <div id="estimate-approval-link-controls" className="grid gap-4">
     {state.approvalUrl?<div id="estimate-approval-link-result" className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
       <h3 className="font-black text-emerald-950">Private approval link created</h3>
-      <p className="mt-1 text-sm text-emerald-900">Copy it now. KarKR cannot display this private URL again after you leave this result.</p>
+      <p className="mt-1 text-sm text-emerald-900">Copy it now. {productBrand.name} cannot display this private URL again after you leave this result.</p>
       <input id="estimate-approval-link-output" className="mt-3 min-h-11 w-full rounded-xl border bg-white px-3 text-sm" readOnly value={state.approvalUrl}/>
-      <button id="estimate-approval-link-copy-button" type="button" onClick={copyLink} className="mt-3 min-h-11 rounded-xl bg-zinc-950 px-4 text-sm font-bold text-white">Copy link</button>
+      <button id="estimate-approval-link-copy-button" type="button" onClick={copyLink} className="mt-3 min-h-11 rounded-xl bg-brand-primary px-4 text-sm font-bold text-white hover:bg-brand-primary-strong">Copy link</button>
       {copyStatus?<p id="estimate-approval-link-copy-status" role="status" className="mt-2 text-sm">{copyStatus}</p>:null}
       <p className="mt-2 text-xs text-zinc-600">Expires {state.expiresAt?new Intl.DateTimeFormat("en-PH",{dateStyle:"medium",timeStyle:"short",timeZone:"Asia/Manila"}).format(new Date(state.expiresAt)):"automatically"}.</p>
       {state.delivery?<div id="estimate-approval-delivery-result" className="mt-3 grid gap-1 border-t border-emerald-200 pt-3 text-xs">

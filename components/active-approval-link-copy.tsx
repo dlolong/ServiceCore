@@ -22,7 +22,7 @@ export function ActiveApprovalLinkCopy({jobId,linkId}:{jobId:string;linkId:strin
   </form>;
   return <div id="job-order-approval-copy-link-result" className="mt-2 grid gap-2 sm:grid-cols-[1fr_auto]">
     <input id="job-order-approval-copy-link-output" className="min-h-9 min-w-0 rounded-lg border bg-white px-2" readOnly value={state.approvalUrl}/>
-    <button id="job-order-approval-copy-link-confirm-button" type="button" onClick={copy} className="min-h-9 rounded-lg bg-zinc-950 px-3 font-bold text-white">Copy link</button>
+    <button id="job-order-approval-copy-link-confirm-button" type="button" onClick={copy} className="min-h-9 rounded-lg bg-brand-primary px-3 font-bold text-white hover:bg-brand-primary-strong">Copy link</button>
     {copyStatus?<span id="job-order-approval-copy-link-status" role="status" className="sm:col-span-2">{copyStatus}</span>:null}
   </div>;
 }

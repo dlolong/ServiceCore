@@ -1,4 +1,26 @@
-# KarKR UI Conventions
+# NegOSu UI Conventions
+
+Public and shared customer-facing product chrome uses NegOSu. Automotive workspaces may present NegOSu Automotive and Salon workspaces NegOSu Salon & Beauty; KarKR and ServiceCore remain internal/legacy architecture terminology unless a compatibility surface explicitly requires them.
+
+The master, Automotive, and Salon landing pages share small header, hero, feature, how-it-works, and footer primitives while supplying vertical-specific content. The first viewport keeps navigation, headline, calls to action, and a product visual visible at common desktop sizes. At 320–430 px, actions stack when necessary and the page retains one document scroll region.
+
+Shared authentication uses `login-*`, `signup-*`, and password-recovery semantic IDs. Business selection cards use visible customer language, never internal keys. The multi-organization page uses `organization-selector` and stable `organization-option-<id>` forms; switching always posts to a server-authorized action. The compact setup checklist uses `onboarding-progress` and `onboarding-step-<key>` IDs and never traps the owner outside the application.
+
+Salon Appointment detail prioritizes the one valid next lifecycle action, Customer self-service, and Payment balance. The public appointment page is mobile-first, outside the dashboard shell, `noindex`, and uses `public-salon-appointment-*` IDs. Staff rows keep authorization role visually separate from job function and show Today/Next schedule context loaded in batches.
+
+These operational conventions are shared by KarKR and Salon. Industry configuration supplies terminology and capabilities; shared components must not hard-code Automotive labels when rendering a Salon organization. Salon uses `salon-*` semantic IDs on its page roots, primary actions, tables/cards, and appointment controls. Desktop record lists remain tables where practical and mobile layouts use compact cards.
+
+## Navigation priority
+
+Dashboard navigation is ordered by operational importance rather than alphabetically:
+
+```text
+Daily work
+→ Business operations
+→ Management
+```
+
+Group headings and order communicate importance; navigation groups do not receive different decorative colors. Every group uses the same neutral inactive treatment, while the current destination alone receives the NegOSu brand-blue selected state. Permission and industry filtering happen before grouping; empty groups are omitted. Mobile bottom navigation retains the smallest high-value set for the current vertical, while the More menu preserves the same grouped hierarchy.
 
 ## Standard page anatomy
 
@@ -12,6 +34,14 @@ Desktop table / mobile cards      Optional selected detail
 ```
 
 `PageHeader`, `FilterBar`, `EmptyState`, and `StatusPill` in `components/page-patterns.tsx` are the focused shared primitives. They are intentionally compositional rather than a universal management-page abstraction.
+
+## Admin color system
+
+Authenticated workspaces use a restrained NegOSu admin palette: navy for structural chrome and primary text, blue for primary actions and interactive emphasis, soft slate for the page canvas and secondary surfaces, and white for working cards, tables, menus, and dialogs. Borders and shadows stay subtle so dense operational data remains the focus.
+
+Semantic colors are reserved for meaning: emerald for success/available, amber for warning/busy/pending, red for danger/errors, and sky for uncommon informational feedback. Page eyebrows, links, selected plans, filters, and neutral information use the blue/navy/slate system. Navigation importance is expressed by grouping and order, never by rainbow color treatment.
+
+The implementation contract is documented in `docs/DESIGN_SYSTEM.md`. Shared components keep backwards-compatible props while centralizing new visual behavior.
 
 ## Lists, tables, and cards
 
@@ -46,6 +76,17 @@ The app shell owns one main content scroll region. The desktop navigation can sc
 
 Review at 1366×768, 1440×900, and common mobile widths 320, 375, 390, and 430 pixels. Do not allow mobile page overflow, unreachable dialog actions, or bottom-navigation collisions.
 
+The dashboard shell owns the primary vertical scroll region. `html`/`body` must not compete with its fixed viewport frame; the sidebar may scroll independently only when navigation exceeds the viewport. Dialog content is the only vertical scroll region inside a modal. Wide desktop tables may use their explicit horizontal frame as a fallback, but responsive routes should prefer purpose-built mobile cards.
+
+## Shared interaction rules
+
+- Primary, secondary, outline, ghost, danger/destructive, and icon buttons come from `components/ui/button.tsx`; meaningful controls provide at least a 44px touch target.
+- Quiet action links remain visibly interactive through brand text, hover treatment, or their surrounding button/navigation surface.
+- Tabs remain on one line and scroll horizontally on narrow viewports. The active item has a visible brand underline and `aria-current="page"`.
+- Ordinary cards use the small elevation token. Medium elevation is reserved for deliberately raised panels and dialogs; large elevation is reserved for major overlays.
+- Form feedback uses polite live status for success and assertive alerts for errors.
+- Motion is brief and purposeful, and the global reduced-motion query removes animation and smooth scrolling when requested.
+
 Complex Job Orders use a compact section navigation plus a sticky desktop Service Advisor panel. On mobile the panel participates in the single page flow. Add/edit estimate lines, authorization, and payment are focused dialogs; never nest these dialogs. The first viewport should expose identity, status, estimate, authorization, parts, balance, blockers, and the recommended next action.
 
 Job Order Parts use a desktop table and mobile cards with Required, Reserved, Consumed, Available, Shortage, and Status values. Reserve, usage, and release are focused dialogs on the Job Order route. On hand is labeled as physical stock; released allocation must never be presented as a stock receipt.
@@ -75,4 +116,12 @@ Pages are mobile-first, avoid horizontal overflow, expose visible loading/empty/
 
 The current application predates the complete ID convention. Add IDs whenever a screen is materially changed; a dedicated screen-by-screen pass should use Playwright at 320, 375, 390, and 430 pixels rather than unsafe mechanical JSX rewrites.
 
+Salon operational lists follow the same contract: Appointments, Clients, Treatments, Resources, and Staff render compact desktop tables and mobile cards with deterministic `salon-*` IDs. Create/edit appointment, treatment, and resource routes use `FormDialog`; the route remains bookmarkable while the form body owns the single dialog scroll region.
+
 Maintenance uses a compact desktop table and mobile cards. Keep due-status counts and filters in the first viewport, preserve semantic `maintenance-*` IDs, and route rebooking through the existing appointment form instead of creating a parallel booking UI. Show the linked appointment and reminder state independently: “Appointment scheduled” suppresses reminders but does not imply completed maintenance. Use the standard dialog for an explicit snooze-until date and optional reason; keep Resume Reminders inline and retain the actual due date on screen.
+
+## Owner Command Center
+
+At 1366×768, keep business identity, operational date, branch selector, four to six compact metrics, Action Inbox preview, and the start of Today's Operations in the first viewport. On 320, 375, 390, and 430 pixel widths use two metric columns, then actions, then a vertical operations list. Do not introduce horizontal desktop tables or nested page scrolling on mobile.
+
+Use the stable roots `negosu-command-center-page`, `negosu-command-center-header`, `negosu-command-center-branch-selector`, `negosu-command-center-metrics`, `negosu-action-inbox`, `negosu-today-operations`, `negosu-staff-snapshot`, `negosu-branch-performance`, and `negosu-command-center-quick-actions`. Repeated action IDs derive from the stable business/action identifier.

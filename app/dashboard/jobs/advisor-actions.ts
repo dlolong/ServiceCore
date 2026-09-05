@@ -4,17 +4,18 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
-import { getDashboardContext } from "@/lib/auth/context";
+import { requireAutomotiveContext as getDashboardContext } from "@/lib/auth/industry-access";
 import { formValue } from "@/lib/crm";
 import { clientEnv } from "@/lib/env/client";
 import { parseMoneyToCentavos } from "@/lib/operations";
-import { createClient } from "@/lib/supabase/server";
+import { createClient as createSupabaseClient } from "@/lib/supabase/server";
 import { createEstimateApprovalLink, revokeEstimateApprovalLink } from "@/modules/automotive/work-execution/estimate-approval";
 import { recoverActiveEstimateApprovalToken } from "@/modules/automotive/work-execution/estimate-approval.runtime";
 import { consumeJobOrderPart, releaseJobOrderPart, reserveJobOrderPart, reserveRequiredJobOrderParts } from "@/modules/automotive/work-execution/job-parts.service";
 import { recordCustomerAuthorization, saveEstimateItem } from "@/modules/automotive/work-execution/job-order.service";
 
 function go(jobId:string,kind:"message"|"error",message:string):never { redirect(`/dashboard/jobs/${jobId}?${kind}=${encodeURIComponent(message)}`); }
+async function createClient(){await getDashboardContext();return createSupabaseClient()}
 const itemSchema=z.object({jobId:z.uuid(),estimateId:z.uuid(),itemId:z.union([z.literal(""),z.uuid()]),itemType:z.enum(["service","part","product","other"]),inventoryItemId:z.union([z.literal(""),z.uuid()]),description:z.string().trim().min(1).max(300),quantity:z.coerce.number().int().min(1).max(1000),unitPrice:z.string().trim().min(1),discount:z.string().trim().default("0")});
 const authorizationSchema=z.object({jobId:z.uuid(),estimateId:z.uuid(),decision:z.enum(["approve","decline"]),method:z.enum(["in_person","phone","sms","messenger","email","other"]),note:z.string().trim().max(1000)});
 const paymentSchema=z.object({jobId:z.uuid(),invoiceId:z.uuid(),amount:z.string().trim().min(1),method:z.enum(["cash","gcash","maya","bank_transfer","card","other"]),reference:z.string().trim().max(100),notes:z.string().trim().max(1000)});

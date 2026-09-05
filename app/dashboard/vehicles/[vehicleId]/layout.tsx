@@ -1,2 +1,3 @@
-import Link from"next/link";
-export default async function Layout({children,params}:{children:React.ReactNode;params:Promise<{vehicleId:string}>}){const{vehicleId}=await params;return <><nav aria-label="Vehicle sections" className="mx-auto mb-4 flex max-w-5xl gap-2 overflow-x-auto"><Link className="rounded-xl border bg-white px-4 py-2 text-sm font-bold text-zinc-900" href={`/dashboard/vehicles/${vehicleId}`}>Overview</Link><Link className="rounded-xl border bg-white px-4 py-2 text-sm font-bold text-zinc-900" href={`/dashboard/vehicles/${vehicleId}/history`}>History & timeline</Link></nav>{children}</>}
+import { Tabs } from "@/components/ui/tabs";
+
+export default async function Layout({children,params}:{children:React.ReactNode;params:Promise<{vehicleId:string}>}){const{vehicleId}=await params;return <><Tabs id="vehicle-sections-navigation" ariaLabel="Vehicle sections" className="mx-auto mb-4 max-w-5xl" items={[{id:`vehicle-overview-tab-${vehicleId}`,label:"Overview",href:`/dashboard/vehicles/${vehicleId}`},{id:`vehicle-history-tab-${vehicleId}`,label:"History & timeline",href:`/dashboard/vehicles/${vehicleId}/history`}]}/>{children}</>}

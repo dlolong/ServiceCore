@@ -1,25 +1,16 @@
 import { z } from "zod";
 
+import { productEntryConfigs, publicProductKeys, resolveBusinessIndustry } from "@/modules/platform/product-entry";
+
 const password = z.string().min(8, "Password must contain at least 8 characters.").max(72, "Password is too long.");
 const optionalText = (maximum: number, message: string) => z.string().trim().max(maximum, message).optional();
 const normalizedEmail = z.string().trim().pipe(z.email("Enter a valid email address.")).transform((value) => value.toLowerCase());
 const optionalEmail = z.union([z.literal(""), normalizedEmail]).optional();
 const optionalUrl = z.union([z.literal(""), z.string().trim().pipe(z.url("Enter a complete URL, including https://."))]).optional();
 
-export const businessTypes = [
-  ["car_wash", "Car Wash"],
-  ["auto_detailing", "Auto Detailing"],
-  ["car_wash_detailing", "Car Wash & Detailing"],
-  ["auto_repair", "Auto Repair"],
-  ["pms_maintenance", "PMS / Maintenance"],
-  ["tire_shop", "Tire Shop"],
-  ["battery_shop", "Battery Shop"],
-  ["auto_aircon", "Auto Aircon"],
-  ["ceramic_coating", "Ceramic Coating"],
-  ["tint_ppf", "Tint / PPF"],
-  ["full_auto_service", "Full Auto Service Center"],
-  ["other", "Other"],
-] as const;
+export const businessTypes = Object.values(productEntryConfigs).flatMap(({ businessTypes: options }) =>
+  options.map(({ value, label }) => [value, label] as const),
+);
 
 const businessTypeValues = businessTypes.map(([value]) => value) as [string, ...string[]];
 
@@ -41,6 +32,7 @@ export const signInSchema = z.object({
 });
 
 export const signUpSchema = z.object({
+  industry: z.enum(publicProductKeys, "Choose Automotive or Salon & Beauty."),
   firstName: z.string().trim().min(1, "Enter your first name.").max(60),
   lastName: z.string().trim().min(1, "Enter your last name.").max(60),
   email: normalizedEmail,
@@ -58,6 +50,7 @@ export const updatePasswordSchema = z.object({ password, confirmPassword: z.stri
 );
 
 export const businessOnboardingSchema = z.object({
+  industry: z.enum(publicProductKeys, "Choose your business category."),
   businessName: z.string().trim().min(2, "Business name must contain at least 2 characters.").max(120),
   businessType: z.enum(businessTypeValues, "Select a business type."),
   slug: z.string().trim().toLowerCase().min(2, "Enter a shop URL.").max(70).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Use lowercase letters, numbers, and single hyphens."),
@@ -66,6 +59,10 @@ export const businessOnboardingSchema = z.object({
   email: optionalEmail,
   website: optionalUrl,
   facebookPage: optionalUrl,
+}).superRefine(({ industry, businessType }, context) => {
+  if (resolveBusinessIndustry(businessType) !== industry) {
+    context.addIssue({ code: "custom", path: ["businessType"], message: "Select a business type for the chosen category." });
+  }
 });
 
 export const branchOnboardingSchema = z.object({

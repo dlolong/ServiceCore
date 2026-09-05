@@ -28,13 +28,12 @@ export async function persistAppointment(input: AppointmentPersistenceInput) {
 /** Storage-only extension used to preserve the existing atomic RPC transaction. */
 export async function persistAppointmentWithExtension(input: AppointmentPersistenceInput, extension: AppointmentStorageExtension) {
   const supabase = await createClient();
-  const rpcName=extension.maintenanceDueId?"save_maintenance_appointment":"save_appointment_with_assignments";
+  const rpcName=extension.maintenanceDueId?"save_maintenance_appointment_with_staff":"save_appointment_with_staff";
   const commonPayload={
     p_branch_id: input.branchId,
     p_customer_id: input.customerId,
     p_vehicle_id: extension.vehicleId,
     p_service_ids: input.serviceIds,
-    p_staff_membership_ids: input.staffAssignments.map(({ staffId }) => staffId),
     p_resource_ids: input.resourceAssignments.map(({ resourceId }) => resourceId),
     p_starts_at: input.scheduledStart,
     p_customer_note: input.customerNote,
@@ -42,8 +41,8 @@ export async function persistAppointmentWithExtension(input: AppointmentPersiste
     p_allow_conflict: input.allowAppointmentConflict ?? false,
   };
   const payload=extension.maintenanceDueId
-    ?{...commonPayload,p_maintenance_due_id:extension.maintenanceDueId}
-    :{...commonPayload,p_appointment_id:input.appointmentId};
+    ?{...commonPayload,p_maintenance_due_id:extension.maintenanceDueId,p_staff_ids:input.staffAssignments.map(({staffId})=>staffId)}
+    :{...commonPayload,p_appointment_id:input.appointmentId,p_staff_ids:input.staffAssignments.map(({staffId})=>staffId)};
   const { data: appointmentId, error } = await supabase.rpc(rpcName,payload);
   if (error || !appointmentId) {
     const safeMessage = error?.message.includes("unavailable") || error?.message.includes("compatible")

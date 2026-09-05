@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { getDashboardContext } from "@/lib/auth/context";
 import { branchSchema, customerSchema, firstError, formValue, normalizePhone, normalizePlate, vehicleSchema } from "@/lib/crm";
 import { createClient } from "@/lib/supabase/server";
+import { assertIndustryFeature } from "@/lib/auth/industry-access";
 
 function message(path: string, kind: "error" | "message", text: string): never {
   redirect(`${path}${path.includes("?") ? "&" : "?"}${kind}=${encodeURIComponent(text)}`);
@@ -97,7 +98,7 @@ export async function archiveCustomer(data: FormData) {
 export async function saveVehicle(data: FormData) {
   const id = formValue(data, "id"); const parsed = vehicleSchema.safeParse(vehicleInput(data)); const back = safeReturnPath(data, id ? `/dashboard/vehicles/${id}/edit` : "/dashboard/vehicles/new");
   if (!parsed.success) message(back, "error", firstError(parsed.error));
-  const { activeMembership } = await getDashboardContext(); const supabase = await createClient(); if (!canOperate(activeMembership.role)) message("/dashboard/vehicles", "error", "You have read-only access.");
+  const { activeMembership } = await getDashboardContext(); assertIndustryFeature(activeMembership,"vehicles"); const supabase = await createClient(); if (!canOperate(activeMembership.role)) message("/dashboard/vehicles", "error", "You have read-only access.");
   const values = parsed.data;
   const { data: customer } = await supabase.from("customers").select("id").eq("id", values.customerId).eq("organization_id", activeMembership.organizationId).eq("is_archived", false).maybeSingle();
   if (!customer) message(back, "error", "Select an active customer from this organization.");
@@ -118,7 +119,7 @@ export async function saveVehicle(data: FormData) {
 }
 
 export async function archiveVehicle(data: FormData) {
-  const id = formValue(data, "id"); const archived = formValue(data, "archived") === "true"; const { activeMembership } = await getDashboardContext(); const supabase = await createClient();
+  const id = formValue(data, "id"); const archived = formValue(data, "archived") === "true"; const { activeMembership } = await getDashboardContext(); assertIndustryFeature(activeMembership,"vehicles"); const supabase = await createClient();
   if (!canOperate(activeMembership.role)) message("/dashboard/vehicles", "error", "You have read-only access.");
   const { error } = await supabase.from("vehicles").update({ is_archived: archived }).eq("id", id).eq("organization_id", activeMembership.organizationId);
   if (error) message(`/dashboard/vehicles/${id}`, "error", "Unable to update this vehicle.");

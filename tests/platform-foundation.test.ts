@@ -2,10 +2,12 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { hasFeatureAccess } from "../modules/platform/features";
-import { industrySupportsFeature, karkrAutomotiveConfig } from "../modules/platform/industry";
-import { karkrNavigation } from "../modules/platform/navigation";
+import { industrySupportsFeature, karkrAutomotiveConfig, resolveIndustryConfig, salonConfig } from "../modules/platform/industry";
+import { groupNavigationByImportance, karkrNavigation, navigationForIndustry } from "../modules/platform/navigation";
+import { isStaffRoleAvailableForIndustry, staffRoleLabelForIndustry, staffRoleOptionsForIndustry } from "../lib/rbac";
 
 test("KarKR enables current automotive capabilities without future engines", () => {
+  assert.equal(karkrAutomotiveConfig.productName, "NegOSu Automotive");
   assert.equal(industrySupportsFeature(karkrAutomotiveConfig, "vehicles"), true);
   assert.equal(industrySupportsFeature(karkrAutomotiveConfig, "job_orders"), true);
   assert.equal(industrySupportsFeature(karkrAutomotiveConfig, "reservations"), false);
@@ -28,4 +30,55 @@ test("feature access keeps capability, entitlement, and permission independent",
 test("navigation keys and destinations are stable and unique", () => {
   assert.equal(new Set(karkrNavigation.map(({ key }) => key)).size, karkrNavigation.length);
   assert.equal(new Set(karkrNavigation.map(({ href }) => href)).size, karkrNavigation.length);
+});
+
+test("navigation is ordered from daily work through operations to management", () => {
+  const automotiveGroups = groupNavigationByImportance(navigationForIndustry(karkrAutomotiveConfig, "owner"));
+  const salonGroups = groupNavigationByImportance(navigationForIndustry(salonConfig, "owner"));
+
+  assert.deepEqual(automotiveGroups.map(({ importance }) => importance), ["primary", "operations", "management"]);
+  assert.deepEqual(salonGroups.map(({ importance }) => importance), ["primary", "operations", "management"]);
+  assert.ok(automotiveGroups[0].items.some(({ key }) => key === "appointments"));
+  assert.ok(automotiveGroups[0].items.some(({ key }) => key === "jobs"));
+  assert.ok(salonGroups[0].items.some(({ key }) => key === "appointments"));
+  assert.ok(salonGroups[1].items.some(({ key }) => key === "customers"));
+  assert.ok(automotiveGroups[2].items.some(({ key }) => key === "settings"));
+  assert.ok(salonGroups[2].items.some(({ key }) => key === "settings"));
+});
+
+test("Salon enables shared scheduling and inventory while disabling Automotive operations", () => {
+  assert.equal(salonConfig.productName,"NegOSu Salon & Beauty");
+  assert.equal(industrySupportsFeature(salonConfig,"appointments"),true);
+  assert.equal(industrySupportsFeature(salonConfig,"inventory"),true);
+  assert.equal(industrySupportsFeature(salonConfig,"vehicles"),false);
+  assert.equal(industrySupportsFeature(salonConfig,"job_orders"),false);
+  assert.equal(industrySupportsFeature(salonConfig,"queue"),false);
+  assert.equal(industrySupportsFeature(salonConfig,"payments"),false);
+});
+
+test("Salon navigation contains only working shared capabilities and terminology", () => {
+  const navigation=navigationForIndustry(salonConfig,"owner");
+  assert.ok(navigation.some(item=>item.label==="Clients"&&item.href==="/dashboard/customers"));
+  assert.ok(navigation.some(item=>item.label==="Treatments"&&item.href==="/dashboard/services"));
+  for(const path of ["/dashboard/vehicles","/dashboard/queue","/dashboard/jobs","/dashboard/payments","/dashboard/reminders"]){
+    assert.equal(navigation.some(item=>item.href===path),false);
+  }
+});
+
+test("unsupported industry values fail closed",()=>{
+  assert.throws(()=>resolveIndustryConfig("corrupt"),/Unsupported organization industry/);
+});
+
+test("staff access roles use the active business terminology", () => {
+  const automotiveRoles = staffRoleOptionsForIndustry("automotive");
+  const salonRoles = staffRoleOptionsForIndustry("salon");
+
+  assert.equal(staffRoleLabelForIndustry("advisor", "automotive"), "Service Advisor");
+  assert.equal(staffRoleLabelForIndustry("technician", "automotive"), "Technician");
+  assert.equal(staffRoleLabelForIndustry("advisor", "salon"), "Front Desk / Coordinator");
+  assert.equal(staffRoleLabelForIndustry("technician", "salon"), "Service Provider");
+  assert.equal(salonRoles.some(({ label }) => /Advisor|Technician/.test(label)), false);
+  assert.deepEqual(automotiveRoles.map(({ value }) => value), salonRoles.map(({ value }) => value));
+  assert.equal(isStaffRoleAvailableForIndustry("manager", "salon"), true);
+  assert.equal(isStaffRoleAvailableForIndustry("manager", "hospitality"), false);
 });

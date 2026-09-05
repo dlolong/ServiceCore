@@ -25,6 +25,11 @@ insert into job_order_items(organization_id,job_order_id,service_id,service_name
 ('27000000-0000-4000-8000-000000000001','d7000000-0000-4000-8000-000000000001','87000000-0000-4000-8000-000000000001','Oil Change Snapshot',300000,300000,60),
 ('27000000-0000-4000-8000-000000000001','d7000000-0000-4000-8000-000000000003','87000000-0000-4000-8000-000000000001','Oil Change Snapshot',300000,300000,60),
 ('27000000-0000-4000-8000-000000000002','d7000000-0000-4000-8000-000000000002','87000000-0000-4000-8000-000000000002','Oil Change B Snapshot',400000,400000,60);
+-- The current release policy requires an issued, fully paid invoice before a
+-- ready vehicle can complete. Keep this older inventory fixture aligned with
+-- that later Automotive invariant so it still exercises completion consumption.
+insert into invoices(id,organization_id,branch_id,job_order_id,invoice_number,status,customer_name_snapshot,vehicle_snapshot,subtotal_centavos,total_centavos,paid_centavos,balance_centavos) values
+('f7000000-0000-4000-8000-000000000001','27000000-0000-4000-8000-000000000001','47000000-0000-4000-8000-000000000001','d7000000-0000-4000-8000-000000000003','INV-RETENTION-2','paid','Retention A','Toyota Fortuner',300000,300000,300000,0);
 
 select plan(43);
 select has_view('public','inventory_stock','stock view exists'); select has_view('public','vehicle_service_history','service history view exists');

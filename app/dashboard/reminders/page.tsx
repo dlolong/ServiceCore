@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { getDashboardContext } from "@/lib/auth/context";
 import { createClient } from "@/lib/supabase/server";
 import { isMaintenanceAppointmentActive,type MaintenanceAppointmentStatus } from "@/modules/automotive/maintenance/reminder-eligibility";
+import { verticalBrands } from "@/modules/platform/brand";
 
 type MaintenanceRow={
   id:string;vehicle_id:string;customer_id:string;service_id:string;customer_name:string;service_name:string;
@@ -61,7 +62,7 @@ export default async function Page({searchParams}:{searchParams:Promise<{status?
   const counts=Object.fromEntries(statuses.slice(1).map(status=>[status,rows.filter(row=>row.due_status===status).length]));
   const selected=rows.find(row=>row.id===query.id);
   return <main id="vehicle-maintenance-page" className="mx-auto max-w-7xl">
-    <header id="vehicle-maintenance-page-header"><p className="text-sm font-bold text-amber-700">KarKR retention</p><h1 className="text-3xl font-black">Maintenance</h1><p className="mt-1 text-sm text-zinc-600">Service recommendations, linked appointments, and reminder status.</p></header>
+    <header id="vehicle-maintenance-page-header"><p className="text-sm font-bold text-brand-primary">{verticalBrands.automotive.displayName} retention</p><h1 className="text-3xl font-black">Maintenance</h1><p className="mt-1 text-sm text-zinc-600">Service recommendations, linked appointments, and reminder status.</p></header>
     <FormMessage message={query.message} error={query.error}/>
     <section id="maintenance-status-summary" className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">{statuses.slice(1).map(status=><Link id={`maintenance-${status}-filter`} key={status} href={`/dashboard/reminders?status=${status}`} className="rounded-xl border bg-white p-3"><span className="text-xs font-bold uppercase text-zinc-500">{status.replaceAll("_"," ")}</span><strong className="block text-2xl">{counts[status]??0}</strong></Link>)}</section>
     <form id="maintenance-filters" className="mt-4 flex flex-wrap gap-2"><Input id="maintenance-search-input" className="min-w-0 flex-1 sm:min-w-72" name="q" defaultValue={query.q} placeholder="Customer, vehicle, plate, or service"/><select id="maintenance-status-select" name="status" defaultValue={selectedStatus} className="min-h-11 rounded-xl border bg-white px-3">{statuses.map(status=><option key={status} value={status}>{status.replaceAll("_"," ")}</option>)}</select><Button id="maintenance-filter-button" type="submit">Filter</Button></form>

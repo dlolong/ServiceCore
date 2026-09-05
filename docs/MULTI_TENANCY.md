@@ -1,5 +1,7 @@
 # Multi-Tenancy
 
+Appointment self-service links retain organization and branch parents and are browser-readable only through a hash-token RPC. Appointment payments repeat the Appointment organization/branch relationship in both trigger and recording RPC. Staff profile organization must match its membership organization.
+
 `organizations` is the tenant root. Business records carry `organization_id` directly or inherit it through an enforced parent. Operational records use `branch_id` where location matters.
 
 For every read or write:

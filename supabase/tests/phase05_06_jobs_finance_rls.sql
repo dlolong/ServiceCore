@@ -79,7 +79,7 @@ select throws_ok($$insert into estimates(organization_id,branch_id,job_order_id,
 select throws_ok($$insert into invoice_items(invoice_id,organization_id,description_snapshot,quantity,unit_price_centavos,line_total_centavos) values((select id from invoices),'25000000-0000-4000-8000-000000000002','attack',1,1,1)$$,'P0001','Invoice item tenant mismatch','cross-tenant invoice item rejected');
 
 set local role authenticated; set local "request.jwt.claims"='{"sub":"15000000-0000-4000-8000-000000000003","role":"authenticated"}';
-select lives_ok($$select transition_job((select id from job_orders where organization_id='25000000-0000-4000-8000-000000000001'),'start')$$,'assigned technician starts job');
+select lives_ok($$select start_automotive_job_work_session((select id from job_orders where organization_id='25000000-0000-4000-8000-000000000001'),null)$$,'assigned technician starts job through canonical work tracking');
 select lives_ok($$update job_inspections set exterior_notes='ok',inspected_by='15000000-0000-4000-8000-000000000003' where job_order_id=(select id from job_orders where organization_id='25000000-0000-4000-8000-000000000001')$$,'assigned technician records inspection');
 select throws_ok($$insert into job_inspections(organization_id,job_order_id,exterior_notes) values('25000000-0000-4000-8000-000000000002','95000000-0000-4000-8000-000000000002','attack')$$,'P0001','Job child organization mismatch','technician cannot write Org B inspection');
 select throws_ok($$select create_estimate((select id from job_orders where organization_id='25000000-0000-4000-8000-000000000001'),0,0,null)$$,'42501','Job not found','technician cannot create estimates');

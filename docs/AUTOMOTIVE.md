@@ -1,4 +1,8 @@
-# KarKR Automotive Domain
+# NegOSu Automotive Domain
+
+NegOSu Automotive is the customer-facing vertical name. `KarKR`, `automotive`, and existing Automotive symbols remain internal or compatibility terminology; they are not being mass-renamed. ServiceCore remains the internal shared-platform name.
+
+Salon standalone completion does not weaken the KarKR path. The generic Appointment transition no longer exposes direct completion; `transition_salon_appointment` verifies a Salon organization. KarKR checked-in appointments continue through Queue, Job Order execution, inspection, QC, payment, and release.
 
 KarKR owns Vehicle, Inspection, Job Order, automotive service execution, QC, vehicle release, and maintenance history. These concepts live under `modules/automotive` and may depend on shared ServiceCore capabilities; shared Core modules never import them.
 
@@ -40,9 +44,9 @@ Apply uses small organization-scoped batches, handles individual Job Order failu
 
 ## Scheduling presentation
 
-KarKR maps an appointment Technician/Assigned Staff choice to a Core staff membership assignment and a Service Bay choice to a Core scheduling resource assignment. Vehicle validation remains in the Automotive Scheduling Adapter. Appointment assignments remain optional, and Job Order technician assignment remains independently editable in Automotive Work Execution rather than becoming a Core concern.
+KarKR maps an appointment Technician/Assigned Staff choice to a Core Staff-profile assignment and a Service Bay choice to a Core scheduling resource assignment. Vehicle validation remains in the Automotive Scheduling Adapter. Appointment assignments remain optional, and Job Order technician assignment remains independently editable in Automotive Work Execution rather than becoming a Core concern.
 
-Queue, Calendar, and appointment details display scheduling assignments as planning context. Queue conversion provides an unchecked staff-copy control. When explicitly selected, Automotive Work Execution reloads the appointment assignment, validates organization, active technician membership, and branch eligibility, then initializes the single Job Order technician in the conversion transaction. The two assignments are independent afterward. Service-bay context is never copied because Job Orders have no work-bay assignment model.
+Queue, Calendar, and appointment details display scheduling assignments as planning context. Queue conversion provides an unchecked Staff-copy control. When explicitly selected, Automotive Work Execution reloads the appointment assignment, validates organization, active Staff profile, operational branch eligibility, and any linked login where self-service authorization is needed, then initializes the single Job Order technician in the conversion transaction. The two assignments are independent afterward. Service-bay context is never copied because Job Orders have no work-bay assignment model.
 
 ## Work Execution
 
@@ -61,6 +65,30 @@ The public application boundary is `modules/automotive/work-execution/job-order.
 `convert_queue_to_job` is the atomic conversion operation. It locks the queue record, confirms branch access, requires an active vehicle belonging to the same organization and customer, verifies the linked appointment, snapshots appointment services, updates the queue, and returns the existing Job Order on retry. Unique appointment and queue-entry constraints provide structural duplicate protection.
 
 PostgreSQL calculates `job_order_items.line_total_centavos` and `job_orders.actual_total_centavos` using integer centavos. Estimates, invoices, and payments remain shared commerce capabilities. Existing audit triggers record Job Order creation and status changes; there is no second event or notification system.
+
+### Technician work sessions
+
+KarKR reuses the existing Job Order primary and item technician assignments as the execution source of truth. `automotive_job_order_work_sessions` records immutable Start-to-Pause/Stop segments with server timestamps and a technician display-name snapshot. Resume creates a new segment; it does not rewrite the previous one.
+
+```text
+Job Order assignment
+    ↓
+Readiness-checked Start
+    ↓
+Active work segment
+    ↓
+Pause / Stop
+    ↓
+Resume as a new segment when needed
+    ↓
+Actual labor summary
+    ↓
+Job completion
+```
+
+Every segment Start rechecks the saved inspection, current customer authorization, reservation coverage, Job Order state, canonical Staff assignment, operational Staff branch eligibility, and the acting user's access branch. A partial unique index permits only one active Automotive session per Staff profile, while a repeated Start on the same Job Order returns the active session. Completion requires all active sessions to be stopped. An allowed cancellation closes anomalous active sessions without deleting elapsed history.
+
+Elapsed time is always derived from `started_at` and `ended_at`. The browser timer reconstructs the active elapsed value from `started_at` after refresh and performs no continuous database writes. Parallel technicians contribute separate labor effort, so summed labor may exceed Job wall-clock duration. Work sessions never alter estimates, invoices, customer labor charges, payroll, attendance, or commissions.
 
 ## Service Advisor Workflow
 
@@ -99,3 +127,11 @@ Approval-link creation atomically enqueues one Email and one SMS intent with det
 | Invoice/payment records | Core finance capability |
 | Balance/release presentation | Automotive read model using Core finance |
 | Release policy | Automotive Work Execution |
+
+## Owner Command Center
+
+The Automotive contributor derives current estimate-awaiting-approval, queued work, quality-check, vehicle-ready, completed-invoice-balance, maintenance-overdue, and low-stock actions from existing records. It also presents today's Appointments and active Job Orders with Customer, Vehicle, service, scheduled Staff/resource, and direct workflow links. Technician context comes from real active work sessions and upcoming scheduling assignments.
+
+Automotive Job, item, and work-session assignment stores canonical Staff profile IDs. A manager may record ready work for assigned operational Staff without login access; a technician acting for themselves is still resolved through their authenticated membership. Name snapshots preserve history after Staff deactivation or access removal. Work time remains operational only and does not change billing or payroll.
+
+These rules remain Automotive-owned. Core receives only neutral metric/action/operation/staff view models and never queries Job Orders, Vehicles, estimates, or maintenance. No duration-based “taking too long” warning exists because the product has no authoritative SLA threshold.

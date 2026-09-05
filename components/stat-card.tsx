@@ -1,5 +1,6 @@
 import { Card } from "@/components/ui/card";
 
-export function StatCard({ label, value, note }: { label: string; value: string; note?: string }) {
-  return <Card className="p-5"><div className="text-sm font-semibold text-zinc-500">{label}</div><div className="mt-2 text-3xl font-black tracking-tight">{value}</div>{note ? <div className="mt-2 text-xs text-zinc-500">{note}</div> : null}</Card>;
+export function StatCard({ label, value, note, id }: { label: string; value: string; note?: string; id?: string }) {
+  const semanticId = id ?? `stat-card-${label.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")}`;
+  return <Card id={semanticId} className="p-4"><div className="text-xs font-medium uppercase tracking-wide text-admin-text-muted">{label}</div><div className="mt-1.5 text-2xl font-semibold tracking-tight text-admin-text">{value}</div>{note ? <div className="mt-1.5 text-xs text-admin-text-muted">{note}</div> : null}</Card>;
 }

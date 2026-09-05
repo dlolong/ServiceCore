@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const blockingAppointmentStatuses = ["requested", "confirmed", "checked_in", "queued"] as const;
+export const blockingAppointmentStatuses = ["requested", "confirmed", "checked_in", "in_service", "queued"] as const;
 export type AvailabilityConflictCode = "INVALID_TIME_RANGE" | "BRANCH_CLOSED" | "SERVICE_NOT_AVAILABLE" | "APPOINTMENT_OVERLAP" | "STAFF_NOT_AVAILABLE" | "STAFF_NOT_ALLOWED_AT_BRANCH" | "STAFF_BUSY" | "RESOURCE_NOT_AVAILABLE" | "RESOURCE_NOT_AT_BRANCH" | "RESOURCE_INACTIVE" | "RESOURCE_BUSY" | "RESOURCE_CAPACITY_EXCEEDED";
 export type AvailabilityConflict = { type: "invalid_time" | "branch_closed" | "service_unavailable" | "appointment_conflict" | "staff_conflict" | "resource_conflict"; code: AvailabilityConflictCode; message: string; appointmentId?: string; serviceId?: string; staffId?: string; resourceId?: string };
 export type AvailabilityResult = { available: boolean; conflicts: AvailabilityConflict[]; scheduledEnd: string | null; durationMinutes: number };

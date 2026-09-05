@@ -9,10 +9,11 @@ import { Card } from "@/components/ui/card";
 import { formatMoney } from "@/lib/operations";
 import { estimateApprovalTokenSchema, type PublicEstimateApproval } from "@/modules/automotive/work-execution/estimate-approval";
 import { getPublicEstimateApproval } from "@/modules/automotive/work-execution/estimate-approval.runtime";
+import { verticalBrands } from "@/modules/platform/brand";
 
 export const dynamic="force-dynamic";
 export const revalidate=0;
-export const metadata:Metadata={title:"Estimate review · KarKR",robots:{index:false,follow:false,nocache:true}};
+export const metadata:Metadata={title:`Estimate review · ${verticalBrands.automotive.displayName}`,robots:{index:false,follow:false,nocache:true}};
 
 type Query={confirm?:"approve"|"decline";error?:string};
 
@@ -30,7 +31,7 @@ export default async function EstimateApprovalPage({params,searchParams}:{params
   if(validToken.success){try{approval=await getPublicEstimateApproval(validToken.data);}catch{approval={state:"invalid"};}}
   if(!("estimate" in approval)){
     const copy=stateCopy[approval.state];
-    return <main id="public-estimate-page" className="grid min-h-screen place-items-center bg-zinc-100 p-4 sm:p-6"><Card id="public-estimate-state-card" className="w-full max-w-lg p-6 text-center sm:p-8"><p className="text-sm font-black text-amber-700">KarKR estimate review</p><h1 className="mt-2 text-2xl font-black sm:text-3xl">{copy.title}</h1><p className="mt-3 text-sm leading-6 text-zinc-600">{copy.message}</p><p className="mt-6 text-xs text-zinc-500">Do not send this private link to anyone else.</p></Card></main>;
+    return <main id="public-estimate-page" className="grid min-h-screen place-items-center bg-zinc-100 p-4 sm:p-6"><Card id="public-estimate-state-card" className="w-full max-w-lg p-6 text-center sm:p-8"><p className="text-sm font-black text-amber-700">{verticalBrands.automotive.displayName} estimate review</p><h1 className="mt-2 text-2xl font-black sm:text-3xl">{copy.title}</h1><p className="mt-3 text-sm leading-6 text-zinc-600">{copy.message}</p><p className="mt-6 text-xs text-zinc-500">Do not send this private link to anyone else.</p></Card></main>;
   }
 
   const address=approval.branch.address.filter(Boolean).join(", ");

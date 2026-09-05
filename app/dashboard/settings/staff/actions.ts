@@ -1,6 +1,107 @@
 "use server";
-import{redirect}from"next/navigation";import{formValue,firstError}from"@/lib/crm";import{inviteStaffSchema,updateStaffSchema}from"@/lib/rbac";import{getDashboardContext}from"@/lib/auth/context";import{createClient}from"@/lib/supabase/server";
-const path="/dashboard/settings/staff";function go(kind:"message"|"error",message:string):never{redirect(`${path}?${kind}=${encodeURIComponent(message)}`)}
-export async function inviteStaff(data:FormData){const{activeMembership}=await getDashboardContext(),all=data.get("allBranches")==="on",parsed=inviteStaffSchema.safeParse({email:formValue(data,"email"),role:formValue(data,"role"),branchIds:all?[]:data.getAll("branchIds"),expiresHours:formValue(data,"expiresHours")});if(!parsed.success)go("error",firstError(parsed.error));const supabase=await createClient(),{data:token,error}=await supabase.rpc("create_staff_invitation",{p_organization_id:activeMembership.organizationId,p_email:parsed.data.email,p_role:parsed.data.role,p_branch_ids:parsed.data.branchIds,p_expires_hours:parsed.data.expiresHours});if(error||!token)go("error",error?.message??"Unable to create invitation.");redirect(`${path}?message=${encodeURIComponent("Invitation created. Copy the secure link below.")}&invite=${encodeURIComponent(`/accept-invite?token=${token}`)}`)}
-export async function updateStaff(data:FormData){const parsed=updateStaffSchema.safeParse({membershipId:formValue(data,"membershipId"),role:formValue(data,"role"),isActive:formValue(data,"isActive")==="true",branchIds:data.get("allBranches")==="on"?[]:data.getAll("branchIds")});if(!parsed.success)go("error",firstError(parsed.error));const supabase=await createClient(),{error}=await supabase.rpc("update_staff_member",{p_membership_id:parsed.data.membershipId,p_role:parsed.data.role,p_is_active:parsed.data.isActive,p_branch_ids:parsed.data.branchIds});if(error)go("error",error.message);go("message",parsed.data.isActive?"Staff access updated.":"Staff member disabled.")}
-export async function revokeInvitation(data:FormData){const supabase=await createClient(),{error}=await supabase.rpc("revoke_staff_invitation",{p_invitation_id:formValue(data,"invitationId")});if(error)go("error",error.message);go("message","Invitation revoked.")}
+
+import { redirect } from "next/navigation";
+
+import {
+  staffProfileAccessSchema,
+  staffProfileInvitationSchema,
+  staffProfileSchema,
+} from "@/app/dashboard/settings/staff/staff-forms";
+import { getDashboardContext } from "@/lib/auth/context";
+import { firstError, formValue } from "@/lib/crm";
+import { isStaffRoleAvailableForIndustry } from "@/lib/rbac";
+import { createClient } from "@/lib/supabase/server";
+import {
+  inviteStaffProfile as inviteStaffProfileService,
+  saveStaffProfile as saveStaffProfileService,
+  updateStaffProfileAccess as updateStaffProfileAccessService,
+} from "@/modules/core/staff";
+
+const path = "/dashboard/settings/staff";
+
+function go(kind: "message" | "error", message: string): never {
+  redirect(`${path}?${kind}=${encodeURIComponent(message)}`);
+}
+
+function branchIds(data: FormData) {
+  return data.get("allBranches") === "on" ? [] : data.getAll("branchIds");
+}
+
+export async function saveStaffProfile(data: FormData) {
+  const activeValue = formValue(data, "isActive");
+  const parsed = staffProfileSchema.safeParse({
+    staffId: formValue(data, "staffId"),
+    fullName: formValue(data, "fullName"),
+    email: formValue(data, "email"),
+    mobile: formValue(data, "mobile"),
+    jobFunction: formValue(data, "jobFunction"),
+    specializations: formValue(data, "specializations"),
+    isActive: activeValue === "true" ? true : activeValue === "false" ? false : null,
+    branchIds: branchIds(data),
+  });
+  if (!parsed.success) go("error", firstError(parsed.error));
+
+  const { activeMembership } = await getDashboardContext();
+  try {
+    await saveStaffProfileService({ ...parsed.data, organizationId: activeMembership.organizationId });
+  } catch {
+    go("error", "Unable to save the staff profile.");
+  }
+  go("message", parsed.data.staffId ? "Staff profile updated." : "Staff profile added.");
+}
+
+export async function createStaffProfileInvitation(data: FormData) {
+  const parsed = staffProfileInvitationSchema.safeParse({
+    staffId: formValue(data, "staffId"),
+    loginEmail: formValue(data, "loginEmail"),
+    role: formValue(data, "role"),
+    branchIds: branchIds(data),
+    expiresHours: formValue(data, "expiresHours"),
+  });
+  if (!parsed.success) go("error", firstError(parsed.error));
+
+  const { activeMembership } = await getDashboardContext();
+  if (!isStaffRoleAvailableForIndustry(parsed.data.role, activeMembership.industry)) {
+    go("error", "Select an access role for the current business type.");
+  }
+  let token: string;
+  try {
+    token = await inviteStaffProfileService(parsed.data);
+  } catch {
+    go("error", "Unable to create the system access invitation.");
+  }
+  redirect(`${path}?message=${encodeURIComponent("Invitation created. Copy the secure link below.")}&invite=${encodeURIComponent(`/accept-invite?token=${token}`)}`);
+}
+
+export async function updateStaffProfileAccess(data: FormData) {
+  const activeValue = formValue(data, "isActive");
+  const parsed = staffProfileAccessSchema.safeParse({
+    staffId: formValue(data, "staffId"),
+    role: formValue(data, "role"),
+    isActive: activeValue === "true" ? true : activeValue === "false" ? false : null,
+    branchIds: branchIds(data),
+  });
+  if (!parsed.success) go("error", firstError(parsed.error));
+
+  const { activeMembership } = await getDashboardContext();
+  if (!isStaffRoleAvailableForIndustry(parsed.data.role, activeMembership.industry)) {
+    go("error", "Select an access role for the current business type.");
+  }
+  try {
+    await updateStaffProfileAccessService(parsed.data);
+  } catch {
+    go("error", "Unable to update system access.");
+  }
+  go("message", parsed.data.isActive ? "System access updated." : "System access disabled.");
+}
+
+export async function revokeInvitation(data: FormData) {
+  const invitationId = formValue(data, "invitationId");
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(invitationId)) {
+    go("error", "Invalid invitation.");
+  }
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("revoke_staff_invitation", { p_invitation_id: invitationId });
+  if (error) go("error", "Unable to revoke the invitation.");
+  go("message", "Invitation revoked.");
+}

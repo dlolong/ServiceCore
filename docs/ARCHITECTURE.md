@@ -1,6 +1,57 @@
 # ServiceCore Architecture
 
-ServiceCore is a modular monolith. KarKR is the active automotive product powered by the shared ServiceCore platform. Core owns reusable service-business capabilities; `modules/automotive` owns vehicles, inspections, job orders, maintenance, and vehicle history.
+## Product entry and organization context
+
+NegOSu is the commercial product brand. `/` presents the master NegOSu experience, `/automotive` presents NegOSu Automotive, and `/salon` presents NegOSu Salon & Beauty. All three compose shared marketing primitives and lead into one Supabase authentication implementation. ServiceCore remains the internal shared-platform and repository architecture name.
+
+```text
+                       NEGOSU
+                         │
+        ┌────────────────┼────────────────┐
+        ↓                ↓                ↓
+     Master          Automotive      Salon & Beauty
+       `/`         `/automotive`        `/salon`
+        └────────────────┬────────────────┘
+                         ↓
+              Shared Auth + ServiceCore
+                         ↓
+             Organization Industry Config
+```
+
+After login, one active membership continues to its branch recovery or dashboard. Multiple memberships require an explicit, server-authorized organization selection. That selection sets the HTTP-only active-organization context; navigation and route gates then resolve from persisted organization industry, features, and permissions. See `docs/PRODUCT_ENTRY.md`.
+
+## Salon operational boundaries
+
+Salon owns its named `requested → confirmed → checked_in → in_service → completed` policy. Core retains common scheduling and availability, while a Salon-only transition verifies industry before starting/completing a standalone Appointment. Automotive still proceeds through Queue and Job Order Work Execution.
+
+```text
+                    CORE PAYMENT
+                        ↑
+               ┌────────┴────────┐
+               │                 │
+           AUTOMOTIVE          SALON
+        Invoice / Job Order   Appointment
+```
+
+`payments` remains one ledger. Existing Automotive rows retain invoice/Job Order references; Salon uses the mutually exclusive Appointment reference. Both paths enforce organization/branch integrity, server-authoritative balances, RLS, audit, and shared reversal behavior.
+
+ServiceCore is the internal modular-monolith platform. NegOSu Automotive is the customer-facing Automotive solution; KarKR remains an internal/legacy compatibility name. Core owns reusable service-business capabilities, while `modules/automotive` owns vehicles, inspections, job orders, maintenance, and vehicle history.
+
+Salon is the second architecture-validation vertical. An explicit `organizations.industry` value selects shell terminology and capabilities; existing organizations default to `automotive`. Salon reuses Core Customers, Services, Appointments, Scheduling, Availability, Staff, Resources, Products/Inventory, permissions, and audit without importing Automotive runtime modules. See `docs/SALON.md`.
+
+Industry is trusted tenant configuration, not an editable organization preference. Ordinary authenticated sessions cannot change it. Shared appointment lifecycle supports standalone completion, while vertical work-execution adapters remain outside Core scheduling.
+
+```text
+           ServiceCore (internal)
+        ┌────────────┴────────────┐
+        ↓                         ↓
+ NegOSu Automotive      NegOSu Salon & Beauty
+        ↓                         ↓
+ Automotive adapters       Core Scheduling
+        └────────────┬────────────┘
+                     ↓
+             Shared Core + RLS
+```
 
 > Core must never require a vehicle to function.
 
@@ -79,7 +130,7 @@ The existing opening-hours format does not define overnight hours; `close <= ope
 
 ## Scheduling Assignments
 
-Core Scheduling now supports optional normalized staff and resource assignments. `organization_memberships.id` is the canonical staff identity, and the existing `membership_branch_assignments` relation defines branch eligibility. Generic `scheduling_resources` belong to one branch and expose an active flag and integer capacity. Assignment replacement is part of the same serialized PostgreSQL transaction as appointment persistence.
+Core Scheduling supports optional normalized Staff-profile and resource assignments. `organization_staff_profiles.id` is the canonical operational Staff identity, and `staff_profile_branch_assignments` defines scheduling eligibility independently from login access. An optional membership link grants authentication and authorization; it is not required to be Staff. Generic `scheduling_resources` belong to one branch and expose an active flag and integer capacity. Assignment replacement is part of the same serialized PostgreSQL transaction as appointment persistence.
 
 ```text
 Core Scheduling
@@ -259,3 +310,16 @@ All four are necessary; none substitutes for another.
 - observability: structured error tracking and application logs;
 - analytics: privacy-aware product analytics;
 - backups: validate restore procedure before production launch.
+
+## 11. Owner Command Center boundary
+
+The owner/manager dashboard composes a vertical-neutral Core metrics snapshot with one explicit Automotive or Salon contributor. Core owns paid revenue, branch-local Appointment counts, shared outstanding balances, low-stock projection, branch scope, and the presentation contract. Each vertical owns the meaning and wording of its operational actions, Today's Operations, and staff context.
+
+```text
+NegOSu dashboard
+  -> Shared Command Center metrics
+  +  active vertical contributor
+  -> derived Action Inbox and branch performance
+```
+
+The database aggregate reauthorizes every branch and role. Actions are derived from live state and have no persistent task table. Core never imports a vertical module; the page is the composition root. See `docs/COMMAND_CENTER.md`.

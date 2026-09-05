@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     const supabase = await createClient();
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error && data.user) {
-      if (next === "/reset-password") return NextResponse.redirect(new URL(next, clientEnv.NEXT_PUBLIC_APP_URL));
+      if (next.startsWith("/reset-password")) return NextResponse.redirect(new URL(next, clientEnv.NEXT_PUBLIC_APP_URL));
       const destination = await resolveOnboardingDestination(supabase, data.user.id);
       return NextResponse.redirect(new URL(destination.path === "/dashboard" ? next : destination.path, clientEnv.NEXT_PUBLIC_APP_URL));
     }

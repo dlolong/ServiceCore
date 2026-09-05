@@ -125,6 +125,17 @@ test("worker cancels an opted-out channel before any provider attempt",async()=>
   assert.equal(repository.results[0].errorCode,"EMAIL_OPTED_OUT");
 });
 
+test("worker treats a missing destination as terminal eligibility, not a provider retry",async()=>{
+  const repository=new MemoryRepository([claimed({recipientAddress:null})]);const email=new StubProvider();
+  const summary=await processNotificationOutboxBatch({repository,providers:{email,sms:new StubProvider()},
+    render:renderEstimateApprovalNotification("https://karkr.example"),workerId:"worker-missing-contact",deliverySecretKey:encryptionKey});
+  assert.deepEqual(summary,{claimed:1,sent:0,retried:0,failed:0,cancelled:1});
+  assert.equal(email.calls.length,0);
+  assert.equal(repository.results[0].result,"cancelled");
+  assert.equal(repository.results[0].errorCode,"EMAIL_MISSING");
+  assert.equal(repository.results[0].nextAvailableAt,undefined);
+});
+
 test("worker does not send after a claimed row is cancelled by a concurrent domain decision",async()=>{
   const repository=new MemoryRepository([claimed()]);repository.isClaimActive=async()=>false;
   const email=new StubProvider();

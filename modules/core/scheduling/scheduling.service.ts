@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { AvailabilityResult } from "@/modules/core/availability/availability.service";
+import { evaluateAppointmentAvailability,evaluateAppointmentAvailabilityInputSchema,type AvailabilityResult } from "@/modules/core/availability/availability.service";
 
 const nullableText = (maximumLength: number) => z.string().trim().max(maximumLength).nullable().optional().transform((value) => value || null);
 
@@ -45,6 +45,19 @@ const schedulingRoles = new Set(["owner", "manager", "advisor"]);
 export async function saveAppointment(input: SaveAppointmentInput) {
   const { getSchedulingServiceDependencies, persistCoreAppointment } = await import("@/modules/core/scheduling/scheduling.runtime");
   return saveAppointmentWithPersistence(input, persistCoreAppointment, await getSchedulingServiceDependencies());
+}
+
+/** Core schedule-only reschedule after a separate capability has authorized the Appointment. */
+export async function rescheduleAuthorizedAppointment(
+  input: z.input<typeof evaluateAppointmentAvailabilityInputSchema>,
+  persistence: (scheduledStart:string)=>Promise<void>,
+  dependencies: Parameters<typeof evaluateAppointmentAvailability>[1],
+){
+  const parsed=evaluateAppointmentAvailabilityInputSchema.safeParse(input);
+  if(!parsed.success)throw new SchedulingError("Appointment time is invalid.");
+  const availability=await evaluateAppointmentAvailability(parsed.data,dependencies);
+  if(!availability.available)throw new SchedulingError(availability.conflicts[0]?.message??"That appointment time is unavailable.");
+  await persistence(parsed.data.scheduledStart);
 }
 
 /** Adapter seam for verticals that must persist an atomic extension association. */

@@ -1,5 +1,23 @@
 # ServiceCore — Codex Implementation Phases
 
+## Platform architecture checkpoint — optional Staff identity
+
+Business Staff is now independent from authenticated NegOSu membership. `organization_staff_profiles.id` is the canonical operational identity; email, mobile, and `membership_id` are optional. Operational branch assignments, scheduling, Salon appointments, and KarKR Job/item/work-session assignments use Staff profile IDs. Login access is granted separately by a profile-bound invitation and retains authorization roles/access branches on membership. Missing Staff contact is a terminal shared-notification ineligibility outcome, never a failed business operation or provider retry. Migrations `0055`–`0061` are append-only compatibility and privilege hardening.
+
+## NegOSu public brand launch
+
+NegOSu is now the commercial master brand. `/` is the master industry-aware landing page, with focused NegOSu Automotive at `/automotive` and NegOSu Salon & Beauty at `/salon`. Shared signup and authentication preserve allowlisted vertical context, while ServiceCore and KarKR remain internal or compatibility terminology rather than undergoing a risky mass rename.
+
+## Platform product entry + KarKR technician work tracking
+
+NegOSu Automotive and NegOSu Salon & Beauty have focused public landing pages backed by shared marketing primitives and one Supabase authentication flow. Signup captures an allowlisted business category, first-organization creation persists the matching industry with a server-authored owner membership, multi-organization accounts require an explicit membership-backed selection, and setup progress is derived from vertical-specific business data. See `docs/PRODUCT_ENTRY.md`.
+
+KarKR Job Order execution now records server-timestamped technician work-session segments. The canonical tracked Start/Resume boundary rechecks inspection, customer authorization, parts readiness, execution assignment, tenant, and branch access; Pause/Stop close a segment, one active session per technician is protected in PostgreSQL, and Job completion cannot leave active work. Queue, Job Order, and My Work views display the resulting operational context without turning tracked time into payroll or customer billing. Migrations `0050`–`0053` are append-only.
+
+## Salon Appointment operational flow
+
+Added organization-specific Staff job functions, derived daily schedules, the `in_service` Salon lifecycle, secure customer confirmation/reschedule, shared-outbox Salon reminders, and a Core Appointment Payment reference without changing Automotive invoice payments. Migration `0043` is append-only; tokens remain hash-only, reschedules repeat availability under the branch lock, and Automotive cannot call the Salon completion boundary.
+
 ## KarKR operational checkpoint — Idempotent Estimate Approval Delivery
 
 Estimate approval now creates its private link and separate Email/SMS notification intents in one PostgreSQL transaction. Shared Core Notifications provides explicit eligibility, destination snapshots, deterministic deduplication, `SKIP LOCKED` claims, stale-lease recovery, bounded retry, terminal failure, manual retry, and protected cron processing. Automotive owns estimate templates and one idempotent near-expiry reminder per eligible channel. Raw tokens stay out of outbox payloads/logs/audit, and manual Copy Link continues working with providers disabled.
@@ -18,7 +36,7 @@ KarKR Calendar, Queue, and appointment details now compose scheduled staff and r
 
 ## Platform architecture checkpoint — Scheduling Assignments
 
-Core Scheduling now accepts optional staff and generic resource assignments. Memberships remain canonical staff identities and existing branch assignments remain canonical eligibility. Branch-owned resources support active/inactive history and integer capacity. Core Availability evaluates staff/resource occupancy, while `save_appointment_with_assignments` persists the appointment, service snapshots, and replacement assignments atomically under the existing branch transaction lock. KarKR displays staff and service-bay terminology without leaking those terms into Core.
+Core Scheduling accepts optional Staff-profile and generic resource assignments. `organization_staff_profiles.id` is the canonical operational Staff identity, and `staff_profile_branch_assignments` is the scheduling-eligibility source; linked membership and access branches remain authorization concerns. Branch-owned resources support active/inactive history and integer capacity. Core Availability evaluates Staff/resource occupancy, while `save_appointment_with_staff` persists the appointment, service snapshots, and replacement assignments atomically under the existing branch transaction lock. KarKR displays Staff and service-bay terminology without leaking those terms into Core.
 
 ## Platform architecture checkpoint — Core Availability
 
@@ -528,6 +546,12 @@ Design and implement Phase 20 as a separate Expo app/package while preserving th
 ---
 
 # Recommended stopping points for launch
+
+## Salon vertical foundation — architecture validation
+
+Salon now provides a second controlled vertical through explicit organization industry configuration. It reuses Core Clients/Customers, Treatments/Services, appointments, availability, staff/resources, and neutral product inventory. Automotive routes are capability-gated at the shell and server; Salon appointment creation calls Core Scheduling directly without a Vehicle. The current Job Order-backed payment UI and advanced Salon operations remain deferred. See `docs/SALON.md`.
+
+Boundary hardening keeps industry immutable to ordinary authenticated users, guards Automotive public-page actions at their action entry points, and lets a checked-in standalone Salon appointment reach the shared completed state without introducing a Salon Job Order. Core operational lists now provide desktop tables, mobile cards, focused dialogs, and batched Client visit context.
 - **Pilot MVP:** Phases 00–06
 - **Strong paid SaaS:** Phases 00–12
 - **Network product:** through Phase 14
@@ -535,3 +559,15 @@ Design and implement Phase 20 as a separate Expo app/package while preserving th
 - **Production hardening:** Phase 18 before broad launch
 
 Do not wait for all 20 phases before speaking to real shop owners. Pilot after Phase 06 with 3–5 shops and adjust workflows before building deeper inventory/consumer/marketplace features.
+
+## NegOSu Owner Command Center + Action Inbox — completed foundation
+
+The authenticated owner/manager entry point now composes exact shared Payment, Appointment, outstanding-balance, and Inventory aggregates with explicit Automotive or Salon operational contributors. All Branches aggregates only RLS-visible, `can_access_branch`-authorized active branches, with Today evaluated in each branch timezone. The Action Inbox is derived from live business conditions and does not persist a second task state.
+
+Ordinary staff retain the operational/My Work experience without financial totals. Advanced BI, profit accounting, forecasting, AI recommendations, health scores, cohorts, predictive staffing, and a dashboard warehouse remain deferred. See `docs/COMMAND_CENTER.md`.
+
+## NegOSu Product Experience Overhaul — completed product-surface pass
+
+Public entry, shared authentication/onboarding, the Command Center, and representative Automotive and Salon operating routes now use the shared neutral NegOSu design contract. The pass preserves the approved “The Operating System for Your Negosyo.” message, vertical terminology and business behavior while reducing decorative color, excessive elevation, and competing card treatments.
+
+High-traffic Appointments, Services, Inventory, Customers, Queue, Payments, Resources, Branches, and public booking surfaces now use clearer page hierarchy, visible form labels, semantic IDs, and responsive table/card breakpoints. Auth and onboarding retain one document-level scroll. This remains a presentation-layer phase: it adds no database migration, authorization change, or domain workflow rewrite.

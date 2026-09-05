@@ -26,10 +26,10 @@ const transitionTargets: Record<JobOrderAction, Partial<Record<AutomotiveJobOrde
   cancel: { draft: "cancelled", awaiting_approval: "cancelled", approved: "cancelled", queued: "cancelled" },
 };
 
-const queueConversionSchema = z.object({ queueId: z.uuid(), copyScheduledStaff: z.boolean().default(false), scheduledStaffMembershipId: z.uuid().nullable().default(null) });
+const queueConversionSchema = z.object({ queueId: z.uuid(), copyScheduledStaff: z.boolean().default(false), scheduledStaffId: z.uuid().nullable().default(null) });
 const transitionSchema = z.object({ jobOrderId: z.uuid(), action: z.enum(jobOrderActions) });
-const assignmentSchema = z.object({ jobOrderId: z.uuid(), technicianId: z.uuid().nullable(), promisedAt: z.iso.datetime({ offset: true }).nullable() });
-const itemAssignmentSchema = z.object({ jobOrderId: z.uuid(), itemId: z.uuid(), technicianId: z.uuid().nullable() });
+const assignmentSchema = z.object({ jobOrderId: z.uuid(), staffId: z.uuid().nullable(), promisedAt: z.iso.datetime({ offset: true }).nullable() });
+const itemAssignmentSchema = z.object({ jobOrderId: z.uuid(), itemId: z.uuid(), staffId: z.uuid().nullable() });
 const additionalServiceSchema = z.object({ jobOrderId: z.uuid(), serviceId: z.uuid(), quantity: z.number().int().min(1).max(100), requiresApproval: z.boolean(), notes: z.string().trim().max(1000).nullable() });
 const serviceTransitionSchema = z.object({ jobOrderId: z.uuid(), itemId: z.uuid(), action: z.enum(["approve", "decline"]) });
 const estimateItemSchema = z.object({ estimateId: z.uuid(), itemId: z.uuid().nullable(), itemType: z.enum(["service","part","product","other"]), inventoryItemId: z.uuid().nullable(), description: z.string().trim().min(1).max(300), quantity: z.number().int().min(1).max(1000), unitPriceCentavos: z.number().int().min(0), discountCentavos: z.number().int().min(0) });
@@ -51,10 +51,10 @@ export class AutomotiveWorkExecutionError extends Error {
 }
 
 export type JobOrderPersistence = {
-  createFromQueue: (queueId: string, copyScheduledStaff: boolean, scheduledStaffMembershipId: string | null) => Promise<string>;
+  createFromQueue: (queueId: string, copyScheduledStaff: boolean, scheduledStaffId: string | null) => Promise<string>;
   transition: (jobOrderId: string, action: JobOrderAction) => Promise<void>;
-  assignTechnician: (jobOrderId: string, technicianId: string | null, promisedAt: string | null) => Promise<void>;
-  assignItemTechnician: (itemId: string, technicianId: string | null) => Promise<void>;
+  assignTechnician: (jobOrderId: string, staffId: string | null, promisedAt: string | null) => Promise<void>;
+  assignItemTechnician: (itemId: string, staffId: string | null) => Promise<void>;
   addService: (input: z.output<typeof additionalServiceSchema>) => Promise<void>;
   transitionService: (itemId: string, action: "approve" | "decline") => Promise<void>;
   saveInspection: (input: z.output<typeof inspectionSchema>) => Promise<void>;
@@ -82,9 +82,9 @@ export function assertJobOrderTransitionAllowed(status: AutomotiveJobOrderStatus
   return target;
 }
 
-export async function createJobOrderFromQueue(input: { queueId: string; copyScheduledStaff?: boolean; scheduledStaffMembershipId?: string | null }, persistence?: JobOrderPersistence) {
+export async function createJobOrderFromQueue(input: { queueId: string; copyScheduledStaff?: boolean; scheduledStaffId?: string | null }, persistence?: JobOrderPersistence) {
   const parsed = parse(queueConversionSchema, input);
-  return (persistence ?? await runtime()).createFromQueue(parsed.queueId, parsed.copyScheduledStaff, parsed.scheduledStaffMembershipId);
+  return (persistence ?? await runtime()).createFromQueue(parsed.queueId, parsed.copyScheduledStaff, parsed.scheduledStaffId);
 }
 
 export async function transitionJobOrder(input: { jobOrderId: string; action: JobOrderAction }, persistence?: JobOrderPersistence) {
@@ -92,14 +92,14 @@ export async function transitionJobOrder(input: { jobOrderId: string; action: Jo
   return (persistence ?? await runtime()).transition(parsed.jobOrderId, parsed.action);
 }
 
-export async function assignJobOrderTechnician(input: { jobOrderId: string; technicianId: string | null; promisedAt: string | null }, persistence?: JobOrderPersistence) {
+export async function assignJobOrderTechnician(input: { jobOrderId: string; staffId: string | null; promisedAt: string | null }, persistence?: JobOrderPersistence) {
   const parsed = parse(assignmentSchema, input);
-  return (persistence ?? await runtime()).assignTechnician(parsed.jobOrderId, parsed.technicianId, parsed.promisedAt);
+  return (persistence ?? await runtime()).assignTechnician(parsed.jobOrderId, parsed.staffId, parsed.promisedAt);
 }
 
-export async function assignJobOrderItemTechnician(input: { jobOrderId: string; itemId: string; technicianId: string | null }, persistence?: JobOrderPersistence) {
+export async function assignJobOrderItemTechnician(input: { jobOrderId: string; itemId: string; staffId: string | null }, persistence?: JobOrderPersistence) {
   const parsed = parse(itemAssignmentSchema, input);
-  return (persistence ?? await runtime()).assignItemTechnician(parsed.itemId, parsed.technicianId);
+  return (persistence ?? await runtime()).assignItemTechnician(parsed.itemId, parsed.staffId);
 }
 
 export async function addJobOrderService(input: z.input<typeof additionalServiceSchema>, persistence?: JobOrderPersistence) {

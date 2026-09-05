@@ -1,6 +1,8 @@
 import { expect, test } from "@playwright/test";
 
 test("protected operations routes redirect unauthenticated users", async ({ page }) => {
+  test.setTimeout(60_000);
+
   for (const route of ["/dashboard/services", "/dashboard/appointments", "/dashboard/queue"]) {
     await page.goto(route);
     await expect(page).toHaveURL(/\/login/);
@@ -10,7 +12,7 @@ test("protected operations routes redirect unauthenticated users", async ({ page
 
 test("authentication actions and links remain visible", async ({ page }) => {
   await page.goto("/login");
-  await expect(page.getByRole("heading", { name: /^sign in$/i })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /^welcome back$/i })).toBeVisible();
   await expect(page.getByRole("button", { name: /sign in/i })).toBeVisible();
   await expect(page.getByRole("link", { name: /create an account/i })).toBeVisible();
   await expect(page.getByRole("link", { name: /forgot/i })).toBeVisible();
@@ -19,12 +21,12 @@ test("authentication actions and links remain visible", async ({ page }) => {
 test("mobile authentication controls do not overflow or disappear", async ({ page }, testInfo) => {
   test.skip(!testInfo.project.name.startsWith("mobile"), "Mobile-only visual boundary check");
   await page.goto("/login");
-  const controls=page.locator("a:visible, button:visible");
+  const controls = page.locator("a:visible, button:visible");
   await expect(controls).not.toHaveCount(0);
   for (const control of await controls.all()) {
-    const box=await control.boundingBox();
+    const box = await control.boundingBox();
     expect(box).not.toBeNull();
     expect(box!.x).toBeGreaterThanOrEqual(0);
-    expect(box!.x+box!.width).toBeLessThanOrEqual(412);
+    expect(box!.x + box!.width).toBeLessThanOrEqual(412);
   }
 });

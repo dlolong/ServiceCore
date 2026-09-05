@@ -1,2 +1,221 @@
-import Link from"next/link";import{addGalleryImage,saveBranchPublic,savePublicPage,togglePublicService}from"@/app/dashboard/settings/public-page/actions";import{FormMessage}from"@/components/form-message";import{SubmitButton}from"@/components/submit-button";import{Card}from"@/components/ui/card";import{Input}from"@/components/ui/input";import{getDashboardContext}from"@/lib/auth/context";import{createClient}from"@/lib/supabase/server";
-export default async function Page({searchParams}:{searchParams:Promise<{message?:string;error?:string}>}){const[p,{activeMembership},supabase]=await Promise.all([searchParams,getDashboardContext(),createClient()]),[{data:org},{data:branches},{data:services},{data:gallery}]=await Promise.all([supabase.from("organizations").select("slug,public_page_enabled,public_description,logo_url,cover_url,instagram_url,facebook_page,website").eq("id",activeMembership.organizationId).single(),supabase.from("branches").select("id,name,public_description,map_url,opening_hours,accepts_public_bookings").eq("organization_id",activeMembership.organizationId).order("name"),supabase.from("services").select("id,name,is_public").eq("organization_id",activeMembership.organizationId).eq("is_active",true).order("name"),supabase.from("shop_gallery_images").select("id,url,alt_text").eq("organization_id",activeMembership.organizationId)]);return <div className="mx-auto max-w-6xl"><div className="flex flex-wrap justify-between gap-3"><div><p className="text-sm font-bold text-amber-700">Public storefront</p><h1 className="text-3xl font-black">Website and booking</h1></div>{org?.public_page_enabled&&<Link className="font-bold text-amber-800" href={`/shop/${org.slug}`} target="_blank">View public page ↗</Link>}</div><FormMessage {...p}/><div className="mt-6 grid gap-5 lg:grid-cols-2"><Card className="p-5"><h2 className="font-black">Shop page</h2><form action={savePublicPage} className="mt-4 grid gap-3"><label className="flex gap-2 text-sm font-semibold"><input type="checkbox" name="enabled" defaultChecked={org?.public_page_enabled}/> Publish public page</label><textarea name="description" defaultValue={org?.public_description??""} placeholder="Public business description" className="min-h-28 rounded-xl border p-3"/><Input name="logoUrl" defaultValue={org?.logo_url??""} placeholder="Logo image URL"/><Input name="coverUrl" defaultValue={org?.cover_url??""} placeholder="Cover image URL"/><Input name="website" defaultValue={org?.website??""} placeholder="Website URL"/><Input name="facebookPage" defaultValue={org?.facebook_page??""} placeholder="Facebook URL"/><Input name="instagramUrl" defaultValue={org?.instagram_url??""} placeholder="Instagram URL"/><SubmitButton pendingText="Saving…">Save public page</SubmitButton></form></Card><Card className="p-5"><h2 className="font-black">Public services</h2><div className="mt-4 divide-y">{services?.map(service=><form action={togglePublicService} className="flex items-center justify-between py-3" key={service.id}><input type="hidden" name="serviceId" value={service.id}/><input type="hidden" name="isPublic" value={String(!service.is_public)}/><span>{service.name}<small className="block text-zinc-500">{service.is_public?"Visible publicly":"Private"}</small></span><SubmitButton pendingText="Updating…" variant="secondary">{service.is_public?"Hide":"Publish"}</SubmitButton></form>)}</div></Card>{branches?.map(branch=><Card className="p-5" key={branch.id}><h2 className="font-black">{branch.name}</h2><form action={saveBranchPublic} className="mt-4 grid gap-3"><input type="hidden" name="branchId" value={branch.id}/><label className="flex gap-2 text-sm font-semibold"><input type="checkbox" name="acceptsBookings" defaultChecked={branch.accepts_public_bookings}/> Accept online requests</label><textarea name="description" defaultValue={branch.public_description??""} placeholder="Branch description" className="min-h-20 rounded-xl border p-3"/><Input name="mapUrl" defaultValue={branch.map_url??""} placeholder="Public map URL"/><label className="text-sm font-semibold">Opening-hours JSON<textarea name="openingHours" defaultValue={JSON.stringify(branch.opening_hours,null,2)} className="mt-2 min-h-64 w-full rounded-xl border p-3 font-mono text-xs"/></label><SubmitButton pendingText="Saving…">Save branch</SubmitButton></form></Card>)}<Card className="p-5"><h2 className="font-black">Gallery</h2><form action={addGalleryImage} className="mt-4 grid gap-3"><Input required type="url" name="url" placeholder="Public image URL"/><Input required name="alt" placeholder="Image description"/><SubmitButton pendingText="Adding…">Add image</SubmitButton></form><div className="mt-4 grid grid-cols-2 gap-2">{gallery?.map(image=><img className="aspect-square rounded-xl object-cover" src={image.url} alt={image.alt_text} key={image.id}/>)}</div></Card></div></div>}
+import Link from "next/link";
+
+import {
+  addGalleryImage,
+  saveBranchPublic,
+  savePublicPage,
+  togglePublicService,
+} from "@/app/dashboard/settings/public-page/actions";
+import { FormMessage } from "@/components/form-message";
+import { PageHeader } from "@/components/page-patterns";
+import { SubmitButton } from "@/components/submit-button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { getDashboardContext } from "@/lib/auth/context";
+import { createClient } from "@/lib/supabase/server";
+
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<{ message?: string; error?: string }>;
+}) {
+  const [query, { activeMembership }, supabase] = await Promise.all([
+    searchParams,
+    getDashboardContext(),
+    createClient(),
+  ]);
+
+  const [{ data: organization }, { data: branches }, { data: services }, { data: gallery }] =
+    await Promise.all([
+      supabase
+        .from("organizations")
+        .select("slug,public_page_enabled,public_description,logo_url,cover_url,instagram_url,facebook_page,website")
+        .eq("id", activeMembership.organizationId)
+        .single(),
+      supabase
+        .from("branches")
+        .select("id,name,public_description,map_url,opening_hours,accepts_public_bookings")
+        .eq("organization_id", activeMembership.organizationId)
+        .order("name"),
+      supabase
+        .from("services")
+        .select("id,name,is_public")
+        .eq("organization_id", activeMembership.organizationId)
+        .eq("is_active", true)
+        .order("name"),
+      supabase
+        .from("shop_gallery_images")
+        .select("id,url,alt_text")
+        .eq("organization_id", activeMembership.organizationId),
+    ]);
+
+  const publicPageAction = organization?.public_page_enabled ? (
+    <Link
+      id="public-page-view-link"
+      className="font-semibold text-brand-primary-strong hover:underline"
+      href={`/shop/${organization.slug}`}
+      target="_blank"
+    >
+      View public page ↗
+    </Link>
+  ) : null;
+
+  return (
+    <main id="public-page-settings-page" className="mx-auto max-w-6xl">
+      <PageHeader
+        id="public-page-settings-header"
+        eyebrow="Public storefront"
+        title="Website and booking"
+        description="Control the services, branches, business details, and images customers can see."
+        action={publicPageAction}
+      />
+      <FormMessage {...query} />
+
+      <div id="public-page-settings-grid" className="mt-6 grid gap-5 lg:grid-cols-2">
+        <Card id="public-page-profile-card" className="p-5">
+          <h2 className="font-semibold text-admin-text">Shop page</h2>
+          <form id="public-page-profile-form" action={savePublicPage} className="mt-4 grid gap-4">
+            <label className="flex min-h-11 items-center gap-2 text-sm font-medium text-admin-text">
+              <input
+                id="public-page-enabled-checkbox"
+                type="checkbox"
+                name="enabled"
+                defaultChecked={organization?.public_page_enabled}
+              />
+              Publish public page
+            </label>
+            <label className="text-sm font-medium text-admin-text">
+              Business description
+              <textarea
+                id="public-page-description-input"
+                name="description"
+                defaultValue={organization?.public_description ?? ""}
+                className="mt-1.5 min-h-28 w-full rounded-ui-md border border-admin-border bg-white p-3"
+              />
+            </label>
+            <PublicPageField id="public-page-logo-url-input" label="Logo image URL" name="logoUrl" value={organization?.logo_url} />
+            <PublicPageField id="public-page-cover-url-input" label="Cover image URL" name="coverUrl" value={organization?.cover_url} />
+            <PublicPageField id="public-page-website-input" label="Website URL" name="website" value={organization?.website} />
+            <PublicPageField id="public-page-facebook-input" label="Facebook URL" name="facebookPage" value={organization?.facebook_page} />
+            <PublicPageField id="public-page-instagram-input" label="Instagram URL" name="instagramUrl" value={organization?.instagram_url} />
+            <SubmitButton id="public-page-save-button" pendingText="Saving…">Save public page</SubmitButton>
+          </form>
+        </Card>
+
+        <Card id="public-services-card" className="p-5">
+          <h2 className="font-semibold text-admin-text">Public services</h2>
+          <div id="public-services-list" className="mt-4 divide-y divide-admin-border">
+            {services?.map((service) => (
+              <form
+                id={`public-service-form-${service.id}`}
+                action={togglePublicService}
+                className="flex min-h-16 items-center justify-between gap-3 py-3"
+                key={service.id}
+              >
+                <input type="hidden" name="serviceId" value={service.id} />
+                <input type="hidden" name="isPublic" value={String(!service.is_public)} />
+                <span className="min-w-0 text-sm font-medium text-admin-text">
+                  {service.name}
+                  <small className="block text-admin-text-muted">{service.is_public ? "Visible publicly" : "Private"}</small>
+                </span>
+                <SubmitButton id={`public-service-toggle-button-${service.id}`} pendingText="Updating…" variant="secondary">
+                  {service.is_public ? "Hide" : "Publish"}
+                </SubmitButton>
+              </form>
+            ))}
+          </div>
+        </Card>
+
+        {branches?.map((branch) => (
+          <Card id={`public-branch-card-${branch.id}`} className="p-5" key={branch.id}>
+            <h2 className="font-semibold text-admin-text">{branch.name}</h2>
+            <form id={`public-branch-form-${branch.id}`} action={saveBranchPublic} className="mt-4 grid gap-4">
+              <input type="hidden" name="branchId" value={branch.id} />
+              <label className="flex min-h-11 items-center gap-2 text-sm font-medium text-admin-text">
+                <input
+                  id={`public-branch-bookings-checkbox-${branch.id}`}
+                  type="checkbox"
+                  name="acceptsBookings"
+                  defaultChecked={branch.accepts_public_bookings}
+                />
+                Accept online requests
+              </label>
+              <label className="text-sm font-medium text-admin-text">
+                Branch description
+                <textarea
+                  id={`public-branch-description-input-${branch.id}`}
+                  name="description"
+                  defaultValue={branch.public_description ?? ""}
+                  className="mt-1.5 min-h-20 w-full rounded-ui-md border border-admin-border bg-white p-3"
+                />
+              </label>
+              <PublicPageField
+                id={`public-branch-map-url-input-${branch.id}`}
+                label="Public map URL"
+                name="mapUrl"
+                value={branch.map_url}
+              />
+              <label className="text-sm font-medium text-admin-text">
+                Opening-hours JSON
+                <textarea
+                  id={`public-branch-opening-hours-input-${branch.id}`}
+                  name="openingHours"
+                  defaultValue={JSON.stringify(branch.opening_hours, null, 2)}
+                  className="mt-1.5 min-h-64 w-full rounded-ui-md border border-admin-border bg-white p-3 font-mono text-xs"
+                />
+              </label>
+              <SubmitButton id={`public-branch-save-button-${branch.id}`} pendingText="Saving…">Save branch</SubmitButton>
+            </form>
+          </Card>
+        ))}
+
+        <Card id="public-gallery-card" className="p-5">
+          <h2 className="font-semibold text-admin-text">Gallery</h2>
+          <form id="public-gallery-form" action={addGalleryImage} className="mt-4 grid gap-4">
+            <PublicPageField id="public-gallery-url-input" label="Public image URL" name="url" type="url" required />
+            <PublicPageField id="public-gallery-alt-input" label="Image description" name="alt" required />
+            <SubmitButton id="public-gallery-add-button" pendingText="Adding…">Add image</SubmitButton>
+          </form>
+          <div id="public-gallery-grid" className="mt-4 grid grid-cols-2 gap-2">
+            {gallery?.map((image) => (
+              // Organization-provided image hosts are intentionally not constrained by Next Image configuration.
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                id={`public-gallery-image-${image.id}`}
+                className="aspect-square w-full rounded-ui-md object-cover"
+                src={image.url}
+                alt={image.alt_text}
+                width={400}
+                height={400}
+                key={image.id}
+              />
+            ))}
+          </div>
+        </Card>
+      </div>
+    </main>
+  );
+}
+
+function PublicPageField({
+  id,
+  label,
+  name,
+  value,
+  type = "text",
+  required = false,
+}: {
+  id: string;
+  label: string;
+  name: string;
+  value?: string | null;
+  type?: "text" | "url";
+  required?: boolean;
+}) {
+  return (
+    <label className="text-sm font-medium text-admin-text" htmlFor={id}>
+      {label}
+      <Input id={id} required={required} type={type} name={name} defaultValue={value ?? ""} className="mt-1.5" />
+    </label>
+  );
+}

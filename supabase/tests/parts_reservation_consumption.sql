@@ -3,14 +3,16 @@ begin; create extension if not exists pgtap with schema extensions; set search_p
 insert into auth.users(id,instance_id,aud,role,email,encrypted_password,email_confirmed_at,raw_app_meta_data,raw_user_meta_data,created_at,updated_at) values
 ('19400000-0000-4000-8000-000000000001','00000000-0000-0000-0000-000000000000','authenticated','authenticated','parts-a@example.com','',now(),'{}','{}',now(),now()),
 ('19400000-0000-4000-8000-000000000002','00000000-0000-0000-0000-000000000000','authenticated','authenticated','parts-b@example.com','',now(),'{}','{}',now(),now()),
-('19400000-0000-4000-8000-000000000003','00000000-0000-0000-0000-000000000000','authenticated','authenticated','parts-restricted@example.com','',now(),'{}','{}',now(),now());
+('19400000-0000-4000-8000-000000000003','00000000-0000-0000-0000-000000000000','authenticated','authenticated','parts-restricted@example.com','',now(),'{}','{}',now(),now()),
+('19400000-0000-4000-8000-000000000004','00000000-0000-0000-0000-000000000000','authenticated','authenticated','parts-technician@example.com','',now(),'{}','{}',now(),now());
 insert into organizations(id,name,slug) values
 ('29400000-0000-4000-8000-000000000001','Parts A','parts-a'),
 ('29400000-0000-4000-8000-000000000002','Parts B','parts-b');
 insert into organization_memberships(organization_id,user_id,role) values
 ('29400000-0000-4000-8000-000000000001','19400000-0000-4000-8000-000000000001','owner'),
 ('29400000-0000-4000-8000-000000000002','19400000-0000-4000-8000-000000000002','owner'),
-('29400000-0000-4000-8000-000000000001','19400000-0000-4000-8000-000000000003','manager');
+('29400000-0000-4000-8000-000000000001','19400000-0000-4000-8000-000000000003','manager'),
+('29400000-0000-4000-8000-000000000001','19400000-0000-4000-8000-000000000004','technician');
 insert into branches(id,organization_id,name,timezone,is_primary) values
 ('49400000-0000-4000-8000-000000000001','29400000-0000-4000-8000-000000000001','Parts A Main','Asia/Manila',true),
 ('49400000-0000-4000-8000-000000000002','29400000-0000-4000-8000-000000000001','Parts A Restricted','Asia/Manila',false),
@@ -36,12 +38,12 @@ insert into inventory_movements(organization_id,branch_id,inventory_item_id,move
 ('29400000-0000-4000-8000-000000000001','49400000-0000-4000-8000-000000000002','a9400000-0000-4000-8000-000000000002','opening',5,'parts-opening-restricted'),
 ('29400000-0000-4000-8000-000000000002','49400000-0000-4000-8000-000000000003','a9400000-0000-4000-8000-000000000003','opening',5,'parts-opening-b');
 
-insert into job_orders(id,organization_id,branch_id,customer_id,vehicle_id,job_number,status) values
-('99400000-0000-4000-8000-000000000001','29400000-0000-4000-8000-000000000001','49400000-0000-4000-8000-000000000001','59400000-0000-4000-8000-000000000001','69400000-0000-4000-8000-000000000001',1,'approved'),
-('99400000-0000-4000-8000-000000000002','29400000-0000-4000-8000-000000000001','49400000-0000-4000-8000-000000000001','59400000-0000-4000-8000-000000000001','69400000-0000-4000-8000-000000000001',2,'approved'),
-('99400000-0000-4000-8000-000000000003','29400000-0000-4000-8000-000000000001','49400000-0000-4000-8000-000000000001','59400000-0000-4000-8000-000000000001','69400000-0000-4000-8000-000000000001',3,'approved'),
-('99400000-0000-4000-8000-000000000005','29400000-0000-4000-8000-000000000001','49400000-0000-4000-8000-000000000001','59400000-0000-4000-8000-000000000001','69400000-0000-4000-8000-000000000001',5,'approved'),
-('99400000-0000-4000-8000-000000000004','29400000-0000-4000-8000-000000000002','49400000-0000-4000-8000-000000000003','59400000-0000-4000-8000-000000000002','69400000-0000-4000-8000-000000000002',1,'approved');
+insert into job_orders(id,organization_id,branch_id,customer_id,vehicle_id,job_number,status,primary_technician_user_id) values
+('99400000-0000-4000-8000-000000000001','29400000-0000-4000-8000-000000000001','49400000-0000-4000-8000-000000000001','59400000-0000-4000-8000-000000000001','69400000-0000-4000-8000-000000000001',1,'approved','19400000-0000-4000-8000-000000000004'),
+('99400000-0000-4000-8000-000000000002','29400000-0000-4000-8000-000000000001','49400000-0000-4000-8000-000000000001','59400000-0000-4000-8000-000000000001','69400000-0000-4000-8000-000000000001',2,'approved','19400000-0000-4000-8000-000000000004'),
+('99400000-0000-4000-8000-000000000003','29400000-0000-4000-8000-000000000001','49400000-0000-4000-8000-000000000001','59400000-0000-4000-8000-000000000001','69400000-0000-4000-8000-000000000001',3,'approved',null),
+('99400000-0000-4000-8000-000000000005','29400000-0000-4000-8000-000000000001','49400000-0000-4000-8000-000000000001','59400000-0000-4000-8000-000000000001','69400000-0000-4000-8000-000000000001',5,'approved',null),
+('99400000-0000-4000-8000-000000000004','29400000-0000-4000-8000-000000000002','49400000-0000-4000-8000-000000000003','59400000-0000-4000-8000-000000000002','69400000-0000-4000-8000-000000000002',1,'approved',null);
 insert into estimates(id,organization_id,branch_id,job_order_id,status,version,subtotal_centavos,total_centavos,authorized_total_centavos,approved_at) values
 ('b9400000-0000-4000-8000-000000000001','29400000-0000-4000-8000-000000000001','49400000-0000-4000-8000-000000000001','99400000-0000-4000-8000-000000000001','approved',1,30000,30000,30000,now()),
 ('b9400000-0000-4000-8000-000000000002','29400000-0000-4000-8000-000000000001','49400000-0000-4000-8000-000000000001','99400000-0000-4000-8000-000000000002','approved',1,30000,30000,30000,now()),
@@ -60,7 +62,7 @@ insert into service_consumables(id,organization_id,service_id,inventory_item_id,
 insert into job_inspections(organization_id,job_order_id,exterior_notes,inspected_by)
 values('29400000-0000-4000-8000-000000000001','99400000-0000-4000-8000-000000000001','Checked','19400000-0000-4000-8000-000000000001');
 
-select plan(53);
+select plan(54);
 select has_table('public','inventory_reservations','core reservation ledger exists');
 select has_table('public','inventory_reservation_operations','idempotency operation ledger exists');
 select has_view('public','inventory_availability','derived availability view exists');
@@ -79,8 +81,8 @@ select throws_ok($$select reserve_job_part('99400000-0000-4000-8000-000000000001
 select throws_ok($$select reserve_job_required_parts('99400000-0000-4000-8000-000000000002','reserve-job-two')$$,'P0001','Insufficient available stock','competing request cannot over-reserve final stock');
 select lives_ok($$select reserve_job_part('99400000-0000-4000-8000-000000000002','a9400000-0000-4000-8000-000000000001',2,'partial-job-two')$$,'partial available quantity may be reserved explicitly');
 select is((select quantity_available from inventory_availability where id='a9400000-0000-4000-8000-000000000001'),0.000::numeric,'all physical stock is allocated');
-select throws_ok($$select transition_job('99400000-0000-4000-8000-000000000002','start')$$,'P0001','Complete the vehicle inspection before work starts','inspection remains an independent blocker');
-select lives_ok($$select transition_job('99400000-0000-4000-8000-000000000001','start')$$,'fully reserved authorized work starts');
+select throws_ok($$select start_automotive_job_work_session('99400000-0000-4000-8000-000000000002','19400000-0000-4000-8000-000000000004')$$,'P0001','Complete the vehicle inspection before work starts','inspection remains an independent canonical Start blocker');
+select lives_ok($$select start_automotive_job_work_session('99400000-0000-4000-8000-000000000001','19400000-0000-4000-8000-000000000004')$$,'fully reserved authorized work starts through tracking');
 select lives_ok($$select consume_job_part('99400000-0000-4000-8000-000000000001',(select id from inventory_reservations where reference_id='99400000-0000-4000-8000-000000000001'),2,'consume-job-one')$$,'partial consumption succeeds');
 select lives_ok($$select consume_job_part('99400000-0000-4000-8000-000000000001',(select id from inventory_reservations where reference_id='99400000-0000-4000-8000-000000000001'),2,'consume-job-one')$$,'consumption retry is idempotent');
 select is((select count(*) from inventory_movements where idempotency_key='reservation:consume-job-one')::bigint,1::bigint,'consumption retry creates one stock movement');
@@ -103,6 +105,7 @@ select lives_ok($$select save_estimate_item('b9400000-0000-4000-8000-00000000000
 select is((select quantity_remaining from inventory_reservation_balances where reference_id='99400000-0000-4000-8000-000000000003'),0.000::numeric,'second allocation cycle is fully released');
 select is((select count(*) from inventory_reservation_operations where reservation_id=(select id from inventory_reservations where reference_id='99400000-0000-4000-8000-000000000003') and operation_type='release')::bigint,2::bigint,'allocation generation gives repeated cleanup distinct idempotency keys');
 select throws_ok($$select reserve_job_required_parts('99400000-0000-4000-8000-000000000005','wrong-branch-recipe')$$,'P0001','A required part is not available at this branch','cross-branch service consumable cannot be reserved');
+select lives_ok($$select end_automotive_job_work_session((select id from automotive_job_order_work_sessions where job_order_id='99400000-0000-4000-8000-000000000001'),'stop','Parts work complete')$$,'active technician session stops before completion history');
 
 reset role; update job_orders set status='completed',completed_at=now() where id='99400000-0000-4000-8000-000000000001';
 set local role authenticated; set local "request.jwt.claims"='{"sub":"19400000-0000-4000-8000-000000000001","role":"authenticated"}';

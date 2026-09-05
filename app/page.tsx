@@ -1,62 +1,120 @@
+import type { Metadata } from "next";
+import { ArrowRight, Boxes, CalendarDays, CarFront, CheckCircle2, CreditCard, Scissors, ShieldCheck, Store, Users } from "lucide-react";
 import Link from "next/link";
-import { ArrowRight, CalendarDays, CarFront, ClipboardCheck, Gauge, Wrench } from "lucide-react";
-import { BrandLogo } from "@/components/brand-logo";
 
-const features = [
-  [CalendarDays, "Bookings & queue", "Handle scheduled appointments and walk-ins in one workflow."],
-  [CarFront, "Customer & vehicle CRM", "Keep every vehicle, owner and service history organized."],
-  [ClipboardCheck, "Job orders", "Run inspections, services, estimates and completion from the bay."],
-  [Gauge, "Maintenance reminders", "Bring customers back when their vehicle is due for care."],
-  [Wrench, "Built for auto care", "Car wash, detailing, coating, PMS and service workflows."],
-];
+import { MarketingCta, MarketingFooter, MarketingHeader } from "@/components/marketing/product-landing";
+import { productBrand, verticalBrands } from "@/modules/platform/brand";
 
-export default function Home() {
+export const metadata: Metadata = {
+  title: { absolute: "NegOSu | Business Operating System" },
+  description: productBrand.description,
+  alternates: { canonical: "/" },
+  openGraph: { title: `${productBrand.name} | Business Operating System`, description: productBrand.description, url: "/" },
+};
+
+const sharedCapabilities = [
+  { icon: Users, title: "Customer records", description: "Keep the people you serve and their history easy to find." },
+  { icon: CalendarDays, title: "Scheduling", description: "Coordinate appointments, staff, branches, and resources." },
+  { icon: Store, title: "Services", description: "Manage what you offer, duration, pricing, and availability." },
+  { icon: Boxes, title: "Inventory", description: "Know what is on hand and record stock movement at each branch." },
+  { icon: CreditCard, title: "Payments", description: "Record payments against the work each industry performs." },
+  { icon: ShieldCheck, title: "One secure platform", description: "Use shared permissions, audit, notifications, and tenant controls." },
+] as const;
+
+const faqs = [
+  ["Which businesses can use NegOSu today?", "NegOSu currently supports automotive service businesses and salon or beauty businesses. Each gets terminology and workflows built for its day-to-day operations."],
+  ["Is this one generic workspace?", "No. NegOSu shares secure platform capabilities underneath, while Automotive and Salon & Beauty present different workflows for the business using them."],
+  ["Can I choose my business type during signup?", "Yes. Start from the main page to choose, or enter through a solution page to begin with that supported business type selected."],
+  ["Do I need separate accounts for different businesses?", "No. One NegOSu account can access authorized businesses, and switching changes the actual organization context."],
+] as const;
+
+export default function NegOSuLandingPage() {
   return (
-    <main className="min-h-screen bg-white text-zinc-950">
-      <header className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
-        <Link href="/" className="inline-block" aria-label="KarKR home"><BrandLogo className="w-32 sm:w-36" priority /></Link>
-        <div className="flex items-center gap-3">
-          <Link href="/dashboard" className="rounded-xl px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-zinc-100">Open app</Link>
-          <Link href="/login" className="rounded-xl bg-zinc-950 px-4 py-2 text-sm font-semibold text-white">Sign in</Link>
-        </div>
-      </header>
+    <main id="negosu-home-page" className="min-h-screen overflow-x-clip bg-white text-brand-ink">
+      <MarketingHeader />
 
-      <section className="mx-auto grid max-w-7xl gap-12 px-6 py-20 lg:grid-cols-[1.1fr_.9fr] lg:items-center lg:py-28">
+      <section id="negosu-hero" className="mx-auto grid w-full max-w-7xl gap-8 px-4 pb-12 pt-9 sm:px-6 sm:pb-16 sm:pt-12 lg:min-h-[calc(100svh-4rem)] lg:grid-cols-[1.04fr_.96fr] lg:items-center lg:gap-12 lg:py-14">
         <div>
-          <div className="mb-5 inline-flex rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-sm font-semibold text-amber-800">Your Car. Our Care.</div>
-          <h1 className="max-w-4xl text-5xl font-black tracking-[-0.04em] sm:text-6xl lg:text-7xl">Run your auto-care business from one place.</h1>
-          <p className="mt-6 max-w-2xl text-lg leading-8 text-zinc-600">KarKR brings customers, vehicles, bookings, queue, job orders, payments, inventory and service history into one mobile-first platform.</p>
-          <div className="mt-8 flex flex-wrap gap-3">
-            <Link href="/signup" className="inline-flex items-center gap-2 rounded-2xl bg-zinc-950 px-5 py-3 font-bold text-white">Create your shop <ArrowRight size={18}/></Link>
-            <a href="#features" className="rounded-2xl border border-zinc-200 bg-white px-5 py-3 font-bold text-zinc-950 hover:bg-zinc-50">Explore features</a>
+          <p className="inline-flex rounded-full border border-brand-border bg-brand-tint px-3 py-1 text-sm font-bold text-brand-primary-strong">One platform. Industry-specific experience.</p>
+          <h1 className="mt-5 max-w-4xl text-4xl font-black tracking-[-0.05em] sm:text-5xl lg:text-6xl xl:text-7xl">{productBrand.tagline}</h1>
+          <p className="mt-5 max-w-2xl text-base leading-7 text-zinc-600 sm:text-lg sm:leading-8">Manage customers, appointments, staff, services, inventory, payments, and day-to-day operations from one system—built for the way your business works.</p>
+          <div className="mt-7 flex flex-col gap-3 min-[380px]:flex-row">
+            <Link id="negosu-start-free-button" href="/signup" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-brand-primary px-5 py-3 font-bold text-white shadow-sm hover:bg-brand-primary-strong">Start Free <ArrowRight aria-hidden="true" size={18} /></Link>
+            <a id="negosu-explore-solutions-button" href="#solutions" className="inline-flex min-h-11 items-center justify-center rounded-xl border border-brand-border bg-white px-5 py-3 font-bold hover:bg-brand-tint">Explore Solutions</a>
           </div>
         </div>
-        <div className="rounded-[2rem] border border-zinc-200 bg-zinc-950 p-5 shadow-2xl">
-          <div className="rounded-[1.5rem] bg-zinc-900 p-5 text-white">
-            <p className="text-sm text-zinc-400">Today · Main Branch</p>
-            <div className="mt-4 grid grid-cols-2 gap-3">
-              {[['12','Cars today'],['4','Waiting'],['₱28.4K','Sales'],['3','Due soon']].map(([v,l]) => <div key={l} className="rounded-2xl bg-white/7 p-4"><div className="text-2xl font-black">{v}</div><div className="mt-1 text-xs text-zinc-400">{l}</div></div>)}
+
+        <div id="negosu-hero-product-visual" className="min-w-0 rounded-ui-lg border border-slate-200 bg-white p-3 shadow-ui-md sm:p-4">
+          <div className="overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
+            <div className="flex items-center justify-between gap-3 border-b border-slate-200 bg-white px-4 py-3 sm:px-5">
+              <div><p className="text-xs font-bold uppercase tracking-wider text-brand-primary-strong">NegOSu</p><p className="mt-0.5 font-black text-brand-ink">Today at a glance</p></div>
+              <span className="text-xs font-semibold text-slate-500">2 supported solutions</span>
             </div>
-            <div className="mt-4 rounded-2xl bg-amber-400 p-4 text-zinc-950">
-              <div className="text-xs font-bold uppercase tracking-wider">Next in queue</div>
-              <div className="mt-1 text-xl font-black">Toyota Fortuner · ABC 1234</div>
-              <div className="mt-1 text-sm">Premium wash + interior detail</div>
+            <div className="p-4 sm:p-5">
+            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+              <article className="rounded-xl border border-slate-200 bg-white p-4 text-brand-ink"><CarFront aria-hidden="true" className="text-brand-primary" size={22} /><h2 className="mt-5 font-black">Automotive</h2><p className="mt-1 text-sm text-slate-600">Appointments, vehicles, Job Orders, parts, and maintenance.</p></article>
+              <article className="rounded-xl border border-slate-200 bg-white p-4 text-brand-ink"><Scissors aria-hidden="true" className="text-brand-primary" size={22} /><h2 className="mt-5 font-black">Salon &amp; Beauty</h2><p className="mt-1 text-sm text-slate-600">Clients, Treatments, Staff, stations, and reminders.</p></article>
+            </div>
+            <div className="mt-3 flex items-center gap-2 rounded-xl border border-brand-border bg-brand-tint px-4 py-3 text-sm text-brand-ink"><CheckCircle2 aria-hidden="true" className="shrink-0 text-brand-primary" size={18} />Shared scheduling, inventory, payments, permissions, and audit.</div>
             </div>
           </div>
         </div>
       </section>
 
-      <section id="features" className="border-t border-zinc-100 bg-zinc-50">
-        <div className="mx-auto max-w-7xl px-6 py-20">
-          <h2 className="text-3xl font-black tracking-tight">Start with the workflows shops use every day.</h2>
-          <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-            {features.map(([Icon, title, text]) => {
-              const FeatureIcon = Icon as typeof CalendarDays;
-              return <div key={String(title)} className="rounded-2xl border border-zinc-200 bg-white p-5"><FeatureIcon className="mb-5"/><h3 className="font-bold">{String(title)}</h3><p className="mt-2 text-sm leading-6 text-zinc-600">{String(text)}</p></div>
-            })}
+      <section id="solutions" className="border-y border-zinc-100 bg-zinc-50">
+        <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-18">
+          <p className="text-sm font-bold uppercase tracking-wider text-brand-primary-strong">Supported industries</p>
+          <h2 className="mt-2 text-3xl font-black tracking-tight sm:text-4xl">What kind of business do you run?</h2>
+          <p className="mt-3 max-w-2xl leading-7 text-zinc-600">Choose the solution that matches your work. Both are powered by the same NegOSu platform without forcing every business into the same workflow.</p>
+          <div id="negosu-industry-selector" className="mt-8 grid gap-4 lg:grid-cols-2">
+            <article id="negosu-automotive-card" className="rounded-ui-lg border border-zinc-200 bg-white p-6 shadow-ui-sm sm:p-7">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-tint text-brand-primary-strong"><CarFront aria-hidden="true" /></div>
+              <h3 className="mt-5 text-2xl font-black">Automotive</h3>
+              <p className="mt-2 leading-7 text-zinc-600">For car wash, detailing, repair, maintenance, and auto-care businesses.</p>
+              <Link id="negosu-explore-automotive-link" href={verticalBrands.automotive.path} className="mt-6 inline-flex min-h-11 items-center gap-2 font-bold">Explore Automotive <ArrowRight aria-hidden="true" size={18} /></Link>
+            </article>
+            <article id="negosu-salon-card" className="rounded-ui-lg border border-zinc-200 bg-white p-6 shadow-ui-sm sm:p-7">
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-tint text-brand-primary-strong"><Scissors aria-hidden="true" /></div>
+              <h3 className="mt-5 text-2xl font-black">Salon &amp; Beauty</h3>
+              <p className="mt-2 leading-7 text-zinc-600">For salons, spas, facial care, nail, barber, and beauty-service businesses.</p>
+              <Link id="negosu-explore-salon-link" href={verticalBrands.salon.path} className="mt-6 inline-flex min-h-11 items-center gap-2 font-bold">Explore Salon &amp; Beauty <ArrowRight aria-hidden="true" size={18} /></Link>
+            </article>
           </div>
+          <p className="mt-5 text-sm text-zinc-500">More business types are coming. Signup currently offers only the solutions that are ready.</p>
         </div>
       </section>
+
+      <section id="features" className="mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-18">
+        <p className="text-sm font-bold uppercase tracking-wider text-brand-primary-strong">Shared capabilities</p>
+        <h2 className="mt-2 max-w-3xl text-3xl font-black tracking-tight sm:text-4xl">The essentials stay connected.</h2>
+        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {sharedCapabilities.map(({ icon: Icon, title, description }) => <article id={`negosu-capability-${title.toLowerCase().replaceAll(/[^a-z0-9]+/g, "-")}`} key={title} className="border-t border-slate-200 py-5"><Icon aria-hidden="true" className="text-brand-primary" size={22} /><h3 className="mt-4 font-black">{title}</h3><p className="mt-2 text-sm leading-6 text-zinc-600">{description}</p></article>)}
+        </div>
+      </section>
+
+      <section id="negosu-vertical-overview" className="border-y border-blue-950 bg-brand-ink text-white">
+        <div className="mx-auto grid max-w-7xl gap-5 px-4 py-14 sm:px-6 sm:py-18 lg:grid-cols-2">
+          <article id="negosu-automotive-overview" className="rounded-2xl border border-white/15 bg-white/5 p-6 sm:p-8"><p className="text-sm font-bold uppercase tracking-wider text-blue-300">NegOSu Automotive</p><h2 className="mt-3 text-3xl font-black">From arrival to the next service.</h2><p className="mt-3 leading-7 text-zinc-300">Coordinate appointments, vehicles, inspections, approved work, parts, payments, service history, and maintenance.</p><Link href={verticalBrands.automotive.path} className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-xl bg-brand-primary px-4 py-2 font-bold text-white">See Automotive <ArrowRight aria-hidden="true" size={18} /></Link></article>
+          <article id="negosu-salon-overview" className="rounded-2xl border border-white/15 bg-white/5 p-6 sm:p-8"><p className="text-sm font-bold uppercase tracking-wider text-blue-300">NegOSu Salon &amp; Beauty</p><h2 className="mt-3 text-3xl font-black">From booking to the next visit.</h2><p className="mt-3 leading-7 text-zinc-300">Coordinate Clients, Appointments, Staff, Treatments, chairs or rooms, products, payments, and reminders.</p><Link href={verticalBrands.salon.path} className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-xl bg-brand-primary px-4 py-2 font-bold text-white">See Salon &amp; Beauty <ArrowRight aria-hidden="true" size={18} /></Link></article>
+        </div>
+      </section>
+
+      <section id="negosu-how-it-works" className="mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-18">
+        <p className="text-sm font-bold uppercase tracking-wider text-brand-primary-strong">How NegOSu works</p>
+        <h2 className="mt-2 text-3xl font-black tracking-tight sm:text-4xl">Choose your business. Set up the essentials. Run the day.</h2>
+        <div className="mt-8 grid gap-4 md:grid-cols-3">{["Create your account and choose a supported business type.", "Add your business, first branch, services, team, and resources.", "Enter the workspace built for your industry and start operating."].map((step, index) => <article id={`negosu-how-it-works-step-${index + 1}`} key={step} className="border-t border-zinc-200 py-5"><p className="text-xs font-bold uppercase tracking-wider text-zinc-500">Step {index + 1}</p><p className="mt-2 font-bold leading-6">{step}</p></article>)}</div>
+      </section>
+
+      <section id="negosu-faq" className="border-y border-zinc-100 bg-zinc-50">
+        <div className="mx-auto max-w-4xl px-4 py-14 sm:px-6 sm:py-18">
+          <p className="text-sm font-bold uppercase tracking-wider text-brand-primary-strong">FAQ</p>
+          <h2 className="mt-2 text-3xl font-black tracking-tight sm:text-4xl">A clear start for your business.</h2>
+          <div className="mt-7 divide-y divide-zinc-200 rounded-2xl border border-zinc-200 bg-white px-5">{faqs.map(([question, answer], index) => <details id={`negosu-faq-item-${index + 1}`} key={question} className="group py-5"><summary className="cursor-pointer list-none font-black marker:content-none">{question}<span aria-hidden="true" className="float-right ml-3 text-zinc-400 group-open:rotate-45">+</span></summary><p className="mt-3 max-w-3xl text-sm leading-6 text-zinc-600">{answer}</p></details>)}</div>
+        </div>
+      </section>
+
+      <MarketingCta title="Ready to run your business with less friction?" description="Create your NegOSu account, choose Automotive or Salon & Beauty, and set up the workspace that matches your operation." />
+      <MarketingFooter />
     </main>
   );
 }

@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
     const supabase = await createClient();
     const { data, error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type: rawType as EmailOtpType });
     if (!error && data.user) {
-      if (rawType === "recovery") return NextResponse.redirect(new URL("/reset-password", clientEnv.NEXT_PUBLIC_APP_URL));
+      if (rawType === "recovery") return NextResponse.redirect(new URL(next, clientEnv.NEXT_PUBLIC_APP_URL));
       const destination = await resolveOnboardingDestination(supabase, data.user.id);
       return NextResponse.redirect(new URL(destination.path === "/dashboard" ? next : destination.path, clientEnv.NEXT_PUBLIC_APP_URL));
     }

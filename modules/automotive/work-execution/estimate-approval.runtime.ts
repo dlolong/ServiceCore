@@ -1,6 +1,6 @@
 import "server-only";
 
-import { getDashboardContext } from "@/lib/auth/context";
+import { requireAutomotiveContext as getDashboardContext } from "@/lib/auth/industry-access";
 import { serverEnv } from "@/lib/env/server";
 import { decryptDeliverySecret } from "@/lib/notifications/delivery-secret";
 import { createAdminClient } from "@/lib/supabase/admin";

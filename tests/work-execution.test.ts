@@ -50,13 +50,13 @@ test("queue conversion does not copy scheduled staff without explicit user inten
   assert.equal(selectedMembershipId, null);
 });
 
-test("queue conversion carries only explicit scheduled-staff copy intent", async () => {
-  const membershipId = "31000000-0000-4000-8000-000000000001";
-  let persistedIntent: { copy: boolean; membershipId: string | null } | undefined;
-  await createJobOrderFromQueue({ queueId, copyScheduledStaff: true, scheduledStaffMembershipId: membershipId }, persistence({
-    createFromQueue: async (_queueId, copy, selectedMembershipId) => { persistedIntent = { copy, membershipId: selectedMembershipId }; return jobOrderId; },
+test("queue conversion carries only explicit scheduled-Staff copy intent", async () => {
+  const staffId = "31000000-0000-4000-8000-000000000001";
+  let persistedIntent: { copy: boolean; staffId: string | null } | undefined;
+  await createJobOrderFromQueue({ queueId, copyScheduledStaff: true, scheduledStaffId: staffId }, persistence({
+    createFromQueue: async (_queueId, copy, selectedStaffId) => { persistedIntent = { copy, staffId: selectedStaffId }; return jobOrderId; },
   }));
-  assert.deepEqual(persistedIntent, { copy: true, membershipId });
+  assert.deepEqual(persistedIntent, { copy: true, staffId });
 });
 
 test("job status policy allows the current QC path", () => {
@@ -81,7 +81,7 @@ test("transition service accepts only explicit automotive actions", async () => 
 
 test("technician assignment preserves nullable unassignment", async () => {
   let assignedTechnicianId: string | null | undefined;
-  await assignJobOrderTechnician({ jobOrderId, technicianId: null, promisedAt: null }, persistence({
+  await assignJobOrderTechnician({ jobOrderId, staffId: null, promisedAt: null }, persistence({
     assignTechnician: async (_jobOrderId, value) => { assignedTechnicianId = value; },
   }));
   assert.equal(assignedTechnicianId, null);

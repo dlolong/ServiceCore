@@ -1,4 +1,4 @@
-export function FormMessage({ error, message }: { error?: string; message?: string }) {
+export function FormMessage({ error, message, id }: { error?: string; message?: string; id?: string }) {
   if (!error && !message) return null;
-  return <div role={error ? "alert" : "status"} className={`mt-5 rounded-xl px-4 py-3 text-sm ${error ? "bg-red-50 text-red-800" : "bg-emerald-50 text-emerald-800"}`}>{error ?? message}</div>;
+  return <div id={id} role={error ? "alert" : "status"} aria-live={error ? "assertive" : "polite"} className={`mt-4 rounded-ui-md border px-4 py-3 text-sm ${error ? "border-red-200 bg-status-danger-tint text-status-danger" : "border-emerald-200 bg-status-success-tint text-status-success"}`}>{error ?? message}</div>;
 }
