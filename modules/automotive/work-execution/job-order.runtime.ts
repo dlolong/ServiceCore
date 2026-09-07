@@ -2,6 +2,7 @@ import "server-only";
 
 import { requireAutomotiveContext as getDashboardContext } from "@/lib/auth/industry-access";
 import { createClient } from "@/lib/supabase/server";
+import { isMissingOptionalStaffRpc } from "@/lib/supabase/schema-compatibility";
 import {
   assertJobOrderTransitionAllowed,
   AutomotiveWorkExecutionError,
@@ -35,14 +36,23 @@ export const automotiveJobOrderPersistence: JobOrderPersistence = {
   async assignTechnician(jobOrderId, staffId, promisedAt) {
     await getDashboardContext();
     const supabase = await createClient();
-    const { error } = await supabase.rpc("assign_job_staff", { p_job_id: jobOrderId, p_staff_id: staffId, p_promised_at: promisedAt });
-    if (error) persistenceError(error, "Unable to assign technician.");
+    const canonical = await supabase.rpc("assign_job_staff", { p_job_id: jobOrderId, p_staff_id: staffId, p_promised_at: promisedAt });
+    if (!canonical.error) return;
+    if (!isMissingOptionalStaffRpc(canonical.error, "assign_job_staff")) persistenceError(canonical.error, "Unable to assign technician.");
+
+    // Before 0055, assignment identifiers are authenticated user IDs.
+    const legacy = await supabase.rpc("assign_job", { p_job_id: jobOrderId, p_technician_id: staffId, p_promised_at: promisedAt });
+    if (legacy.error) persistenceError(legacy.error, "Unable to assign technician.");
   },
   async assignItemTechnician(itemId, staffId) {
     await getDashboardContext();
     const supabase = await createClient();
-    const { error } = await supabase.rpc("assign_job_item_staff", { p_item_id: itemId, p_staff_id: staffId });
-    if (error) persistenceError(error, "Unable to assign service technician.");
+    const canonical = await supabase.rpc("assign_job_item_staff", { p_item_id: itemId, p_staff_id: staffId });
+    if (!canonical.error) return;
+    if (!isMissingOptionalStaffRpc(canonical.error, "assign_job_item_staff")) persistenceError(canonical.error, "Unable to assign service technician.");
+
+    const legacy = await supabase.rpc("assign_job_item", { p_item_id: itemId, p_technician_id: staffId });
+    if (legacy.error) persistenceError(legacy.error, "Unable to assign service technician.");
   },
   async addService(input) {
     await getDashboardContext();

@@ -67,16 +67,20 @@ test("application shell uses one neutral navigation treatment and one main conte
   const shell = read("components/app-shell.tsx");
   assert.doesNotMatch(shell, /navigationImportanceStyles|text-cyan|bg-cyan/);
   assert.match(shell, /const navigationStyles/);
+  assert.match(shell, /id="negosu-sidebar"[^>]*overflow-y-auto/);
+  assert.match(shell, /id="negosu-sidebar-dashboard"/);
+  assert.match(shell, /id=\{`negosu-sidebar-\$\{group\.key\}`\}/);
   assert.match(shell, /id="dashboard-main-content"[^>]*overflow-y-auto/);
   assert.match(shell, /pb-\[calc\(5\.5rem\+env\(safe-area-inset-bottom\)\)\]/);
   assert.match(shell, /hidden min-\[360px\]:inline-block/);
   assert.match(shell, /id="negosu-business-switcher"[^>]*hidden items-center gap-2 xl:flex/);
   assert.match(shell, /id="negosu-mobile-business-switcher"[^>]*xl:hidden/);
   assert.doesNotMatch(shell, /id="negosu-business-switcher"[^>]*sm:flex/);
-  assert.match(shell, /id="mobile-nav-settings" href="\/dashboard\/settings"/);
-  assert.match(shell, /activeHref === "\/dashboard\/settings"/);
-  assert.match(shell, /<Settings aria-hidden="true" size=\{20\}\/><span>Settings<\/span>/);
-  assert.doesNotMatch(shell, /id="mobile-nav-more"/);
+  assert.match(shell, /id="mobile-nav-more"/);
+  assert.match(shell, /id="mobile-more-menu"/);
+  assert.doesNotMatch(shell, /id="mobile-nav-settings"/);
+  assert.doesNotMatch(shell, /shadow-\[/);
+  assert.doesNotMatch(shell, /font-(?:black|extrabold|bold)/);
 });
 
 test("FormDialog keeps one contained scroll region and routes Escape to stable state", () => {

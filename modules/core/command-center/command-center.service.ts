@@ -130,6 +130,19 @@ export function sortCommandCenterActions(actions: readonly CommandCenterAction[]
   });
 }
 
+export function sumCommandCenterCentavos(values: readonly (number | string)[]) {
+  return values.reduce((sum, value) => sum + BigInt(normalizeNonNegativeInteger(value)), 0n).toString();
+}
+
+export function calculateCommandCenterOutstanding(
+  expectedCentavos: number | string,
+  paidCentavos: readonly (number | string)[],
+) {
+  const expected = BigInt(normalizeNonNegativeInteger(expectedCentavos));
+  const paid = BigInt(sumCommandCenterCentavos(paidCentavos));
+  return (expected > paid ? expected - paid : 0n).toString();
+}
+
 function actionTime(value?: string) {
   if (!value) return Number.POSITIVE_INFINITY;
   const timestamp = Date.parse(value);

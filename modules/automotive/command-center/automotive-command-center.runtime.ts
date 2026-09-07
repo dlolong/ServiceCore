@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
+import { shouldUseLegacyAutomotiveDirectoryReads } from "@/lib/supabase/schema-compatibility";
 import { zonedDateTimeToUtc } from "@/lib/operations";
 import {
   composeCommandCenterSnapshot,
@@ -33,7 +34,7 @@ export async function getAutomotiveCommandCenter(shared: SharedCommandCenterSnap
   // vertical reads only from the branch rows it actually returned.
   const branchIds = shared.branchPerformance.map(({ branchId }) => branchId);
 
-  const [jobsResult, appointmentsResult, invoicesResult, maintenanceResult, staffResult, sessionsResult] = await Promise.all([
+  const [jobsResult, appointmentsResult, invoicesResult, maintenanceResult, canonicalStaffResult, canonicalSessionsResult] = await Promise.all([
     supabase.from("job_orders")
       .select("id,branch_id,appointment_id,job_number,status,created_at,started_at,promised_at,customers(full_name),vehicles(make,model,plate_number),job_order_items(service_name_snapshot)")
       .eq("organization_id", shared.scope.organizationId).in("branch_id", branchIds).in("status", [...automotiveActiveJobStatuses])
@@ -58,6 +59,34 @@ export async function getAutomotiveCommandCenter(shared: SharedCommandCenterSnap
       .select("id,branch_id,job_order_id,technician_staff_id,technician_name_snapshot,status")
       .eq("organization_id", shared.scope.organizationId).in("branch_id", branchIds).eq("status", "active").limit(150),
   ]);
+
+  let staffRows = (canonicalStaffResult.data ?? []) as unknown as RawStaff[];
+  let sessionRows = (canonicalSessionsResult.data ?? []) as unknown as RawWorkSession[];
+  let staffError = canonicalStaffResult.error;
+  let sessionsError = canonicalSessionsResult.error;
+  if (shouldUseLegacyAutomotiveDirectoryReads({ directory: staffError, sessions: sessionsError })) {
+    const [legacyStaffResult, legacySessionsResult] = await Promise.all([
+      supabase.rpc("list_staff", { p_organization_id: shared.scope.organizationId }),
+      supabase.from("automotive_job_order_work_sessions")
+        .select("id,branch_id,job_order_id,technician_user_id,technician_name_snapshot,status")
+        .eq("organization_id", shared.scope.organizationId).in("branch_id", branchIds).eq("status", "active").limit(150),
+    ]);
+    const legacyStaff = (legacyStaffResult.data ?? []) as unknown as RawLegacyStaff[];
+    const staffIdByUserId = new Map(legacyStaff.map((member) => [member.user_id, member.membership_id]));
+    staffRows = legacyStaff.map((member) => ({
+      staff_id: member.membership_id,
+      full_name: member.full_name,
+      job_function: member.role,
+      branch_ids: member.branch_ids,
+    }));
+    sessionRows = ((legacySessionsResult.data ?? []) as unknown as RawLegacyWorkSession[]).map((session) => ({
+      branch_id: session.branch_id,
+      job_order_id: session.job_order_id,
+      technician_staff_id: staffIdByUserId.get(session.technician_user_id) ?? session.technician_user_id,
+    }));
+    staffError = legacyStaffResult.error;
+    sessionsError = legacySessionsResult.error;
+  }
 
   const jobs = ((jobsResult.data ?? []) as unknown as RawJob[]).map(mapJob);
   const jobIds = jobs.map(({ id }) => id);
@@ -90,8 +119,8 @@ export async function getAutomotiveCommandCenter(shared: SharedCommandCenterSnap
       resourceSummary: labels.resources,
     };
   });
-  const activeSessionByStaff = new Map(((sessionsResult.data ?? []) as unknown as RawWorkSession[]).map((session) => [session.technician_staff_id, session]));
-  const staff = ((staffResult.data ?? []) as unknown as RawStaff[])
+  const activeSessionByStaff = new Map(sessionRows.map((session) => [session.technician_staff_id, session]));
+  const staff = staffRows
     .filter((member) => memberInScope(member.branch_ids, branchIds))
     .map((member): AutomotiveStaffCandidate => {
     const active = activeSessionByStaff.get(member.staff_id);
@@ -124,7 +153,7 @@ export async function getAutomotiveCommandCenter(shared: SharedCommandCenterSnap
     sectionErrors: {
       ...(jobsResult.error || estimatesResult.error || invoicesResult.error || maintenanceResult.error ? { actions: "Some Automotive action items could not be loaded." } : {}),
       ...(jobsResult.error || appointmentsResult.error ? { operations: "Some of today’s Automotive operations could not be loaded." } : {}),
-      ...(staffResult.error || sessionsResult.error ? { staff: "Some technician availability could not be loaded." } : {}),
+      ...(staffError || sessionsError ? { staff: "Some technician availability could not be loaded." } : {}),
     },
   };
 }
@@ -135,6 +164,8 @@ type RawInvoice = { id: string; branch_id: string; job_order_id: string; created
 type RawMaintenance = { id: string; branch_id: string; next_due_at: string; services: { name: string } | { name: string }[] | null; vehicles: Vehicle | Vehicle[] | null };
 type RawStaff = { staff_id: string; full_name: string; job_function: string | null; branch_ids: string[] };
 type RawWorkSession = { branch_id: string; job_order_id: string; technician_staff_id: string };
+type RawLegacyStaff = { membership_id: string; user_id: string; full_name: string; role: string; is_active: boolean; branch_ids: string[] };
+type RawLegacyWorkSession = { branch_id: string; job_order_id: string; technician_user_id: string };
 type Vehicle = { make: string | null; model: string | null; plate_number: string | null };
 
 function mapJob(row: RawJob): AutomotiveJobCandidate {

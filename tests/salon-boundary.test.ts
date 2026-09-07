@@ -34,7 +34,7 @@ test("Salon operational routes expose dialogs and responsive list contracts",()=
     "app/dashboard/appointments/page.tsx":["salon-appointments-table","salon-appointments-mobile-list","salon-appointment-view-"],
     "app/dashboard/services/page.tsx":["salon-treatments-table","salon-treatments-mobile-list","salon-treatment-view-"],
     "app/dashboard/settings/resources/page.tsx":["salon-resources-table","salon-resources-mobile-list","salon-resource-create-dialog"],
-    "app/dashboard/settings/staff/page.tsx":["salon-staff-page","listStaffProfiles"],
+    "app/dashboard/settings/staff/page.tsx":["salon-staff-page","loadStaffManagementDirectory","listOperationalStaffDirectory"],
     "components/staff-management.tsx":["salon-staff-table","salon-staff-mobile-list"],
     "app/dashboard/appointments/new/page.tsx":["salon-appointment-create-dialog"],
     "app/dashboard/services/new/page.tsx":["salon-treatment-create-dialog"],

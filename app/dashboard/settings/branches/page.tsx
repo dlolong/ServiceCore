@@ -25,7 +25,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ m
       {data?.map((branch) => <Card id={`branch-card-${branch.id}`} key={branch.id} elevation="none" className="p-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-2"><h2 className="font-black">{branch.name}</h2>{branch.is_primary ? <span className="rounded-full border border-brand-border bg-brand-tint px-2 py-1 text-xs font-bold text-brand-primary-strong">Default</span> : null}{!branch.is_active ? <span className="rounded-full bg-zinc-200 px-2 py-1 text-xs font-bold">Inactive</span> : null}</div>
+            <div className="flex flex-wrap items-center gap-2"><h2 className="font-semibold">{branch.name}</h2>{branch.is_primary ? <span className="rounded-full border border-brand-border bg-brand-tint px-2 py-1 text-xs font-bold text-brand-primary-strong">Default</span> : null}{!branch.is_active ? <span className="rounded-full bg-zinc-200 px-2 py-1 text-xs font-bold">Inactive</span> : null}</div>
             <p className="mt-2 text-sm text-zinc-600">{[branch.address_line, branch.barangay, branch.city, branch.province].filter(Boolean).join(", ")}</p>
             <p className="mt-1 text-sm text-zinc-500">{branch.phone || branch.email || "No contact details"}</p>
           </div>
@@ -36,7 +36,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ m
           </div> : null}
         </div>
       </Card>)}
-      {data?.length === 0 ? <Card id="branches-empty-state" elevation="none" className="p-10 text-center"><h2 className="font-black">No branches</h2><p className="mt-2 text-sm text-zinc-600">Add a location to continue operating this business.</p></Card> : null}
+      {data?.length === 0 ? <Card id="branches-empty-state" elevation="none" className="p-10 text-center"><h2 className="font-semibold">No branches</h2><p className="mt-2 text-sm text-zinc-600">Add a location to continue operating this business.</p></Card> : null}
     </section>
   </main>;
 }

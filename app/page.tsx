@@ -47,7 +47,7 @@ export default function NegOSuLandingPage() {
         <div id="negosu-hero-product-visual" className="min-w-0 rounded-ui-lg border border-slate-200 bg-white p-3 shadow-ui-md sm:p-4">
           <div className="overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
             <div className="flex items-center justify-between gap-3 border-b border-slate-200 bg-white px-4 py-3 sm:px-5">
-              <div><p className="text-xs font-bold uppercase tracking-wider text-brand-primary-strong">NegOSu</p><p className="mt-0.5 font-black text-brand-ink">Today at a glance</p></div>
+              <div><p className="text-xs font-bold tracking-wider text-brand-primary-strong">NegOSu</p><p className="mt-0.5 font-black text-brand-ink">Today at a glance</p></div>
               <span className="text-xs font-semibold text-slate-500">2 supported solutions</span>
             </div>
             <div className="p-4 sm:p-5">
@@ -94,13 +94,13 @@ export default function NegOSuLandingPage() {
 
       <section id="negosu-vertical-overview" className="border-y border-blue-950 bg-brand-ink text-white">
         <div className="mx-auto grid max-w-7xl gap-5 px-4 py-14 sm:px-6 sm:py-18 lg:grid-cols-2">
-          <article id="negosu-automotive-overview" className="rounded-2xl border border-white/15 bg-white/5 p-6 sm:p-8"><p className="text-sm font-bold uppercase tracking-wider text-blue-300">NegOSu Automotive</p><h2 className="mt-3 text-3xl font-black">From arrival to the next service.</h2><p className="mt-3 leading-7 text-zinc-300">Coordinate appointments, vehicles, inspections, approved work, parts, payments, service history, and maintenance.</p><Link href={verticalBrands.automotive.path} className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-xl bg-brand-primary px-4 py-2 font-bold text-white">See Automotive <ArrowRight aria-hidden="true" size={18} /></Link></article>
-          <article id="negosu-salon-overview" className="rounded-2xl border border-white/15 bg-white/5 p-6 sm:p-8"><p className="text-sm font-bold uppercase tracking-wider text-blue-300">NegOSu Salon &amp; Beauty</p><h2 className="mt-3 text-3xl font-black">From booking to the next visit.</h2><p className="mt-3 leading-7 text-zinc-300">Coordinate Clients, Appointments, Staff, Treatments, chairs or rooms, products, payments, and reminders.</p><Link href={verticalBrands.salon.path} className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-xl bg-brand-primary px-4 py-2 font-bold text-white">See Salon &amp; Beauty <ArrowRight aria-hidden="true" size={18} /></Link></article>
+          <article id="negosu-automotive-overview" className="rounded-2xl border border-white/15 bg-white/5 p-6 sm:p-8"><p className="text-sm font-bold tracking-wider text-blue-300">NegOSu Automotive</p><h2 className="mt-3 text-3xl font-black">From arrival to the next service.</h2><p className="mt-3 leading-7 text-zinc-300">Coordinate appointments, vehicles, inspections, approved work, parts, payments, service history, and maintenance.</p><Link href={verticalBrands.automotive.path} className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-xl bg-brand-primary px-4 py-2 font-bold text-white">See Automotive <ArrowRight aria-hidden="true" size={18} /></Link></article>
+          <article id="negosu-salon-overview" className="rounded-2xl border border-white/15 bg-white/5 p-6 sm:p-8"><p className="text-sm font-bold tracking-wider text-blue-300">NegOSu Salon &amp; Beauty</p><h2 className="mt-3 text-3xl font-black">From booking to the next visit.</h2><p className="mt-3 leading-7 text-zinc-300">Coordinate Clients, Appointments, Staff, Treatments, chairs or rooms, products, payments, and reminders.</p><Link href={verticalBrands.salon.path} className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-xl bg-brand-primary px-4 py-2 font-bold text-white">See Salon &amp; Beauty <ArrowRight aria-hidden="true" size={18} /></Link></article>
         </div>
       </section>
 
       <section id="negosu-how-it-works" className="mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-18">
-        <p className="text-sm font-bold uppercase tracking-wider text-brand-primary-strong">How NegOSu works</p>
+        <p className="text-sm font-bold tracking-wider text-brand-primary-strong">How NegOSu works</p>
         <h2 className="mt-2 text-3xl font-black tracking-tight sm:text-4xl">Choose your business. Set up the essentials. Run the day.</h2>
         <div className="mt-8 grid gap-4 md:grid-cols-3">{["Create your account and choose a supported business type.", "Add your business, first branch, services, team, and resources.", "Enter the workspace built for your industry and start operating."].map((step, index) => <article id={`negosu-how-it-works-step-${index + 1}`} key={step} className="border-t border-zinc-200 py-5"><p className="text-xs font-bold uppercase tracking-wider text-zinc-500">Step {index + 1}</p><p className="mt-2 font-bold leading-6">{step}</p></article>)}</div>
       </section>

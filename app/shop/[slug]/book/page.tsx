@@ -20,6 +20,7 @@ export default async function Page({ params, searchParams }: { params: Promise<{
   if (!shop) notFound();
   const branch = shop.branches.find((item) => item.id === parameters.branch && item.acceptsBookings) ?? shop.branches.find((item) => item.acceptsBookings);
   const service = shop.services.find((item) => item.id === parameters.service) ?? shop.services[0];
+  const hasPublicServices = shop.services.length > 0;
   const date = /^\d{4}-\d{2}-\d{2}$/.test(parameters.date ?? "") ? parameters.date! : new Date(Date.now() + 86400000).toISOString().slice(0, 10);
   let slots: Array<{ slot_at: string }> = [];
   if (branch && service) {
@@ -35,16 +36,16 @@ export default async function Page({ params, searchParams }: { params: Promise<{
       <FormMessage error={parameters.error}/>
 
       <Card id="public-booking-availability-section" elevation="none" className="mt-6 p-5"><h2 className="font-black">1. Branch, service, and date</h2>
-        <form id="public-booking-availability-form" className="mt-4 grid gap-3 sm:grid-cols-3">
+        {!hasPublicServices ? <p id="public-booking-no-services" className="mt-4 rounded-xl border border-status-warning/25 bg-status-warning-tint p-4 text-sm text-status-warning">No services are currently published for online booking. Please contact {shop.name} directly for assistance.</p> : <form id="public-booking-availability-form" className="mt-4 grid gap-3 sm:grid-cols-3">
           <label className="text-sm font-semibold">Branch<select id="public-booking-branch-select" className={select} name="branch" defaultValue={branch?.id}>{shop.branches.filter((item) => item.acceptsBookings).map((item) => <option value={item.id} key={item.id}>{item.name}</option>)}</select></label>
           <label className="text-sm font-semibold">Service<select id="public-booking-service-select" className={select} name="service" defaultValue={service?.id}>{shop.services.map((item) => <option value={item.id} key={item.id}>{item.name}</option>)}</select></label>
           <label className="text-sm font-semibold">Date<Input id="public-booking-date-input" name="date" type="date" min={new Date().toISOString().slice(0, 10)} defaultValue={date} className="mt-2"/></label>
           <Button id="public-booking-show-openings-button" className="sm:col-span-3" variant="secondary" type="submit">Show openings</Button>
-        </form>
+        </form>}
       </Card>
 
       <Card id="public-booking-details-section" elevation="none" className="mt-5 p-5"><h2 className="font-black">2. Contact and vehicle details</h2>
-        {!slots.length ? <p id="public-booking-no-openings" className="mt-4 rounded-xl border border-status-warning/25 bg-status-warning-tint p-4 text-sm text-status-warning">No safe openings are available for this date. Try another date.</p> : <form id="public-booking-request-form" action={submitBooking} className="mt-4 grid gap-4 sm:grid-cols-2">
+        {!hasPublicServices ? <p id="public-booking-request-unavailable" className="mt-4 text-sm text-zinc-600">Booking requests will become available when the business publishes a service.</p> : !slots.length ? <p id="public-booking-no-openings" className="mt-4 rounded-xl border border-status-warning/25 bg-status-warning-tint p-4 text-sm text-status-warning">No safe openings are available for this date. Try another date.</p> : <form id="public-booking-request-form" action={submitBooking} className="mt-4 grid gap-4 sm:grid-cols-2">
           <input type="hidden" name="slug" value={slug}/><input type="hidden" name="branchId" value={branch?.id}/><input type="hidden" name="serviceIds" value={service?.id}/>
           <label className="text-sm font-semibold sm:col-span-2">Preferred time<select id="public-booking-time-select" required className={select} name="preferredAt">{slots.map((slot) => <option value={slot.slot_at} key={slot.slot_at}>{new Intl.DateTimeFormat("en-PH", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Manila" }).format(new Date(slot.slot_at))}</option>)}</select></label>
           <label className="text-sm font-semibold">Full name<Input id="public-booking-name-input" required name="customerName" autoComplete="name" className="mt-2"/></label>

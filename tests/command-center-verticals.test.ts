@@ -89,6 +89,15 @@ test("Salon contributor has no Automotive dependency or terminology", () => {
   }
 });
 
+test("Salon Command Center uses shared migration-compatible Staff and assignment reads", () => {
+  const source = readFileSync(new URL("../modules/salon/command-center/salon-command-center.runtime.ts", import.meta.url), "utf8");
+  assert.match(source, /listOperationalStaffDirectory\(shared\.scope\.organizationId\)/);
+  assert.match(source, /loadAppointmentAssignmentContext\(shared\.scope\.organizationId, appointmentIds\)/);
+  assert.doesNotMatch(source, /from\("staff_directory"\)/);
+  assert.match(source, /assignmentContextResult\.error/);
+  assert.match(source, /memberInScope\(member\.branchIds, branchIds\)/);
+});
+
 test("Command Center dashboard enforces role split and stable semantic IDs", () => {
   const dashboard = readFileSync(new URL("../app/dashboard/page.tsx", import.meta.url), "utf8");
   const view = readFileSync(new URL("../components/command-center/command-center.tsx", import.meta.url), "utf8");

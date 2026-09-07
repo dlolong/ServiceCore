@@ -55,12 +55,15 @@ test("Staff contact and access presentation uses calm explicit fallbacks", () =>
 
 test("Staff settings use canonical profile RPCs, safe directory reads, dialogs, and stable responsive IDs", () => {
   const page = readFileSync(new URL("../app/dashboard/settings/staff/page.tsx", import.meta.url), "utf8");
+  const runtime = readFileSync(new URL("../modules/core/staff/staff.runtime.ts", import.meta.url), "utf8");
   const actions = readFileSync(new URL("../app/dashboard/settings/staff/actions.ts", import.meta.url), "utf8");
   const presentation = readFileSync(new URL("../components/staff-management.tsx", import.meta.url), "utf8");
 
-  assert.match(page, /listStaffProfiles/);
-  assert.match(page, /staff_directory/);
-  assert.match(page, /staff_profile_id/);
+  assert.match(page, /loadStaffManagementDirectory/);
+  assert.match(page, /listOperationalStaffDirectory/);
+  assert.match(page, /listStaffScheduleAssignments/);
+  assert.match(runtime, /staff_directory/);
+  assert.match(runtime, /staff_profile_id/);
   assert.doesNotMatch(page, /rpc\("list_staff"/);
   assert.doesNotMatch(page, /from\("organization_memberships"/);
   for (const service of ["saveStaffProfileService", "inviteStaffProfileService", "updateStaffProfileAccessService"]) assert.match(actions, new RegExp(service));

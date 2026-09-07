@@ -5,7 +5,7 @@
 NegOSu is the commercial product brand. `/` presents the master NegOSu experience, `/automotive` presents NegOSu Automotive, and `/salon` presents NegOSu Salon & Beauty. All three compose shared marketing primitives and lead into one Supabase authentication implementation. ServiceCore remains the internal shared-platform and repository architecture name.
 
 ```text
-                       NEGOSU
+                       NegOSu
                          │
         ┌────────────────┼────────────────┐
         ↓                ↓                ↓

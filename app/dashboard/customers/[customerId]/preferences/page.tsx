@@ -21,7 +21,7 @@ export default async function CustomerCommunicationPreferencesPage({
   if(!customer)notFound();
   return <main id="customer-communication-preferences-page" className="mx-auto max-w-xl">
     <p className="text-sm font-bold text-brand-primary">Customer consent</p>
-    <h1 className="text-3xl font-black">{customer.full_name}</h1>
+    <h1 className="text-3xl font-semibold">{customer.full_name}</h1>
     <p className="mt-2 text-zinc-600">Choose which transactional service updates {productBrand.name} may send to this customer.</p>
     <FormMessage {...query}/>
     <Card id="customer-communication-preferences-card" className="mt-6 p-5">

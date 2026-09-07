@@ -12,15 +12,19 @@ These operational conventions are shared by KarKR and Salon. Industry configurat
 
 ## Navigation priority
 
-Dashboard navigation is ordered by operational importance rather than alphabetically:
+Authenticated navigation uses one shallow, predictable taxonomy:
 
 ```text
-Daily work
-→ Business operations
-→ Management
+Dashboard
+Operations
+Customers / Clients
+Business
+More
 ```
 
-Group headings and order communicate importance; navigation groups do not receive different decorative colors. Every group uses the same neutral inactive treatment, while the current destination alone receives the NegOSu brand-blue selected state. Permission and industry filtering happen before grouping; empty groups are omitted. Mobile bottom navigation retains the smallest high-value set for the current vertical, while the More menu preserves the same grouped hierarchy.
+Dashboard remains a direct destination. The other groups have one collapsible level; the active group opens automatically. Common groups begin expanded, while secondary destinations stay behind More until selected. Compact 36-pixel desktop rows use regular or medium type, and the active item is identified by a quiet surface plus a small brand accent rather than a heavy fill or shadow.
+
+Group headings and order communicate importance; navigation groups do not receive different decorative colors. Permission and industry filtering happen before grouping, empty groups are omitted, and Salon displays Clients rather than Automotive/customer terminology. Mobile bottom navigation is limited to Home, Bookings, Customers/Clients, and More. The More popup preserves the same grouped hierarchy and may scroll as a bounded navigation overlay when a short viewport requires it.
 
 ## Standard page anatomy
 
@@ -87,7 +91,9 @@ The dashboard shell owns the primary vertical scroll region. `html`/`body` must 
 - Form feedback uses polite live status for success and assertive alerts for errors.
 - Motion is brief and purposeful, and the global reduced-motion query removes animation and smooth scrolling when requested.
 
-Complex Job Orders use a compact section navigation plus a sticky desktop Service Advisor panel. On mobile the panel participates in the single page flow. Add/edit estimate lines, authorization, and payment are focused dialogs; never nest these dialogs. The first viewport should expose identity, status, estimate, authorization, parts, balance, blockers, and the recommended next action.
+Complex Job Orders use compact top-level Overview and Work & approvals tabs plus contextual section links and a sticky desktop Service Advisor panel. On mobile the panel participates in the single page flow. Add/edit estimate lines, authorization, and payment are focused dialogs; never nest these dialogs. The first viewport should expose identity, status, estimate, authorization, parts, balance, blockers, and the recommended next action.
+
+Reports keep the shared summary and filters visible, then use Overview, Revenue, Team, and conditional Branches tabs for secondary analysis. Billing keeps current access, price, and plan actions visible while placing detailed limits/features in native disclosure controls. Booking Requests keep decision actions directly reachable and stack them on narrow screens.
 
 Job Order Parts use a desktop table and mobile cards with Required, Reserved, Consumed, Available, Shortage, and Status values. Reserve, usage, and release are focused dialogs on the Job Order route. On hand is labeled as physical stock; released allocation must never be presented as a stock receipt.
 

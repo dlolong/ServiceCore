@@ -3,7 +3,7 @@ import test from "node:test";
 
 import { hasFeatureAccess } from "../modules/platform/features";
 import { industrySupportsFeature, karkrAutomotiveConfig, resolveIndustryConfig, salonConfig } from "../modules/platform/industry";
-import { groupNavigationByImportance, karkrNavigation, navigationForIndustry } from "../modules/platform/navigation";
+import { groupNavigation, karkrNavigation, navigationForIndustry } from "../modules/platform/navigation";
 import { isStaffRoleAvailableForIndustry, staffRoleLabelForIndustry, staffRoleOptionsForIndustry } from "../lib/rbac";
 
 test("KarKR enables current automotive capabilities without future engines", () => {
@@ -32,18 +32,21 @@ test("navigation keys and destinations are stable and unique", () => {
   assert.equal(new Set(karkrNavigation.map(({ href }) => href)).size, karkrNavigation.length);
 });
 
-test("navigation is ordered from daily work through operations to management", () => {
-  const automotiveGroups = groupNavigationByImportance(navigationForIndustry(karkrAutomotiveConfig, "owner"));
-  const salonGroups = groupNavigationByImportance(navigationForIndustry(salonConfig, "owner"));
+test("navigation is grouped into compact vertical-appropriate sections", () => {
+  const automotiveGroups = groupNavigation(navigationForIndustry(karkrAutomotiveConfig, "owner"));
+  const salonGroups = groupNavigation(navigationForIndustry(salonConfig, "owner"));
+  assert.equal(salonGroups.find((group) => group.key === "customers")?.label, "Clients");
 
-  assert.deepEqual(automotiveGroups.map(({ importance }) => importance), ["primary", "operations", "management"]);
-  assert.deepEqual(salonGroups.map(({ importance }) => importance), ["primary", "operations", "management"]);
-  assert.ok(automotiveGroups[0].items.some(({ key }) => key === "appointments"));
-  assert.ok(automotiveGroups[0].items.some(({ key }) => key === "jobs"));
-  assert.ok(salonGroups[0].items.some(({ key }) => key === "appointments"));
-  assert.ok(salonGroups[1].items.some(({ key }) => key === "customers"));
-  assert.ok(automotiveGroups[2].items.some(({ key }) => key === "settings"));
-  assert.ok(salonGroups[2].items.some(({ key }) => key === "settings"));
+  assert.deepEqual(automotiveGroups.map(({ key }) => key), ["dashboard", "operations", "customers", "business", "more"]);
+  assert.deepEqual(salonGroups.map(({ key }) => key), ["dashboard", "operations", "customers", "business", "more"]);
+  assert.ok(automotiveGroups[1].items.some(({ key }) => key === "appointments"));
+  assert.ok(automotiveGroups[1].items.some(({ key }) => key === "jobs"));
+  assert.ok(salonGroups[1].items.some(({ key }) => key === "appointments"));
+  assert.ok(salonGroups[2].items.some(({ key }) => key === "customers"));
+  assert.ok(automotiveGroups[3].items.some(({ key }) => key === "staff"));
+  assert.ok(automotiveGroups[4].items.some(({ key }) => key === "branches"));
+  assert.ok(automotiveGroups[4].items.some(({ key }) => key === "resources"));
+  assert.ok(salonGroups[4].items.some(({ key }) => key === "settings"));
 });
 
 test("Salon enables shared scheduling and inventory while disabling Automotive operations", () => {

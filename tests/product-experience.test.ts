@@ -113,4 +113,15 @@ test("public page settings use labelled controls and deterministic management ID
   for (const label of ["Business description", "Logo image URL", "Opening-hours JSON", "Image description"]) {
     assert.match(publicPageSettings, new RegExp(label));
   }
+  assert.match(publicPageSettings, /Only services marked Visible publicly appear in the Request Booking dropdown/);
+  assert.match(publicPageSettings, /public-services-empty-state/);
+});
+
+test("public booking handles an empty published-service catalog without rendering a broken request form", () => {
+  const booking = source("app/shop/[slug]/book/page.tsx");
+  assert.match(booking, /const hasPublicServices = shop\.services\.length > 0/);
+  assert.match(booking, /public-booking-no-services/);
+  assert.match(booking, /No services are currently published for online booking/);
+  assert.match(booking, /public-booking-request-unavailable/);
+  assert.match(booking, /!hasPublicServices \?/);
 });

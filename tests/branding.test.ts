@@ -1,10 +1,18 @@
 import assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
+import { join } from "node:path";
 import test from "node:test";
 
 import { productBrand, supportedVerticalKeys, verticalBrands } from "../modules/platform/brand";
 
 const read = (path: string) => readFileSync(path, "utf8");
+
+function sourceFiles(root: string): string[] {
+  return readdirSync(root).flatMap((entry) => {
+    const path = join(root, entry);
+    return statSync(path).isDirectory() ? sourceFiles(path) : /\.(?:ts|tsx)$/.test(path) ? [path] : [];
+  });
+}
 
 test("NegOSu brand contract preserves approved casing and supported verticals", () => {
   assert.equal(productBrand.name, "NegOSu");
@@ -27,6 +35,19 @@ test("public marketing pages use NegOSu rather than internal legacy brands", () 
   assert.doesNotMatch(sources, /Negosu|NEGOSU|NegoSu|NegOSU/);
   assert.match(sources, /NegOSu Automotive/);
   assert.match(sources, /NegOSu Salon & Beauty/);
+});
+
+test("all customer-facing source preserves the NegOSu casing", () => {
+  const customerFacingSource = [...sourceFiles("app"), ...sourceFiles("components")].map(read).join("\n");
+  assert.doesNotMatch(customerFacingSource, /Negosu|NEGOSU|NegoSu|NegOSU/);
+});
+
+test("brand-bearing labels do not visually uppercase the NegOSu wordmark", () => {
+  const homepage = read("app/page.tsx");
+  const commandCenter = read("components/command-center/command-center.tsx");
+
+  assert.doesNotMatch(homepage, /className="[^"]*uppercase[^"]*"[^>]*>[^<]*NegOSu/);
+  assert.doesNotMatch(commandCenter, /className="[^"]*uppercase[^"]*"[^>]*>\{verticalLabel\}/);
 });
 
 test("Salon marketing copy stays free of Automotive domain vocabulary", () => {

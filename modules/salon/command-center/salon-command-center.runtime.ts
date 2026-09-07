@@ -7,6 +7,7 @@ import {
   type SharedCommandCenterSnapshot,
 } from "@/modules/core/command-center";
 import { assignmentContextLabel, loadAppointmentAssignmentContext } from "@/modules/core/scheduling/appointment-assignment-view";
+import { listOperationalStaffDirectory } from "@/modules/core/staff/staff.runtime";
 import {
   deriveSalonActions,
   deriveSalonOperations,
@@ -35,20 +36,22 @@ export async function getSalonCommandCenter(shared: SharedCommandCenterSnapshot)
       .select("id,branch_id,starts_at,ends_at,status,expected_total_centavos,created_at,customers(full_name),appointment_services(service_name_snapshot)")
       .eq("organization_id", shared.scope.organizationId).in("branch_id", branchIds).in("status", [...salonCommandCenterStatuses])
       .gte("starts_at", minStart).lt("starts_at", maxEnd).order("starts_at").limit(300),
-    supabase.from("staff_directory")
-      .select("staff_id,full_name,job_function,branch_ids")
-      .eq("organization_id", shared.scope.organizationId).eq("is_active", true)
-      .order("full_name").limit(200),
+    listOperationalStaffDirectory(shared.scope.organizationId)
+      .then((data) => ({ data: data.slice(0, 200), error: false }))
+      .catch(() => ({ data: [], error: true })),
   ]);
   const rawAppointments = (appointmentsResult.data ?? []) as unknown as RawAppointment[];
   const appointmentIds = rawAppointments.map(({ id }) => id);
-  const [assignmentContext, paymentsResult] = await Promise.all([
-    loadAppointmentAssignmentContext(shared.scope.organizationId, appointmentIds),
+  const [assignmentContextResult, paymentsResult] = await Promise.all([
+    loadAppointmentAssignmentContext(shared.scope.organizationId, appointmentIds)
+      .then((data) => ({ data, error: false }))
+      .catch(() => ({ data: new Map(), error: true })),
     appointmentIds.length
       ? supabase.from("payments").select("appointment_id,amount_centavos,status")
         .eq("organization_id", shared.scope.organizationId).in("branch_id", branchIds).in("appointment_id", appointmentIds).limit(1000)
       : Promise.resolve({ data: [], error: null }),
   ]);
+  const assignmentContext = assignmentContextResult.data;
   const paidByAppointment = new Map<string, number>();
   for (const payment of paymentsResult.data ?? []) {
     if (payment.status !== "paid" || !payment.appointment_id) continue;
@@ -71,12 +74,12 @@ export async function getSalonCommandCenter(shared: SharedCommandCenterSnapshot)
       createdAt: appointment.created_at,
     };
   });
-  const staff = ((staffResult.data ?? []) as unknown as RawStaff[])
-    .filter((member) => memberInScope(member.branch_ids, branchIds))
+  const staff = staffResult.data
+    .filter((member) => memberInScope(member.branchIds, branchIds))
     .map((member): SalonStaffCandidate => ({
-      id: member.staff_id,
-      displayName: member.full_name,
-      jobFunction: member.job_function ?? undefined,
+      id: member.staffId,
+      displayName: member.fullName,
+      jobFunction: member.jobFunction ?? undefined,
     }));
   const lowStockByBranch = new Map(shared.branchPerformance.map(({ branchId, lowStockCount }) => [branchId, lowStockCount]));
   const todayAppointments = appointments.filter((appointment) => inBranchToday(appointment.branchId, appointment.startsAt, windows));
@@ -94,8 +97,8 @@ export async function getSalonCommandCenter(shared: SharedCommandCenterSnapshot)
   return {
     snapshot,
     sectionErrors: {
-      ...(appointmentsResult.error || paymentsResult.error ? { actions: "Some Salon action items could not be loaded." } : {}),
-      ...(appointmentsResult.error ? { operations: "Some of today’s Salon appointments could not be loaded." } : {}),
+      ...(appointmentsResult.error || paymentsResult.error || assignmentContextResult.error ? { actions: "Some Salon action items could not be loaded." } : {}),
+      ...(appointmentsResult.error || assignmentContextResult.error ? { operations: "Some of today’s Salon appointments could not be loaded." } : {}),
       ...(staffResult.error ? { staff: "Some Staff availability could not be loaded." } : {}),
     },
   };
@@ -112,8 +115,6 @@ type RawAppointment = {
   customers: { full_name: string } | { full_name: string }[] | null;
   appointment_services: Array<{ service_name_snapshot: string }>;
 };
-type RawStaff = { staff_id: string; full_name: string; job_function: string | null; branch_ids: string[] };
-
 function todayWindow(timeZone: string) {
   const today = new Intl.DateTimeFormat("en-CA", { timeZone }).format(new Date());
   const parts = today.split("-").map(Number);

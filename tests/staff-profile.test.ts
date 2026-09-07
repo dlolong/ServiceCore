@@ -102,3 +102,38 @@ test("Core Staff boundary and canonical scheduling stay vertical-neutral", () =>
   assert.match(hardening, /access_branch_ids uuid\[\]/);
   assert.match(hardening, /save_maintenance_appointment_with_staff/);
 });
+
+test("Staff directory fails over to the permission-checked legacy contract during migration lag", () => {
+  const runtime = readFileSync(new URL("../modules/core/staff/staff.runtime.ts", import.meta.url), "utf8");
+  const page = readFileSync(new URL("../app/dashboard/settings/staff/page.tsx", import.meta.url), "utf8");
+  const management = readFileSync(new URL("../components/staff-management.tsx", import.meta.url), "utf8");
+
+  assert.match(runtime, /isMissingStaffProfilesRpc\(error\)/);
+  assert.match(runtime, /supabase\.rpc\("list_staff"/);
+  assert.match(runtime, /supportsIndependentProfiles: false/);
+  assert.doesNotMatch(runtime, /service_role|SUPABASE_SERVICE_ROLE_KEY/);
+  assert.match(page, /managementAvailable=\{profileManagementAvailable\}/);
+  assert.match(page, /Staff records are available in read-only mode/);
+  assert.match(management, /Temporarily read-only/);
+});
+
+test("Staff scheduling reads retain owner and non-owner behavior on the legacy assignment schema", () => {
+  const runtime = readFileSync(new URL("../modules/core/staff/staff.runtime.ts", import.meta.url), "utf8");
+  const page = readFileSync(new URL("../app/dashboard/settings/staff/page.tsx", import.meta.url), "utf8");
+  const operationalStart = runtime.indexOf("export async function listOperationalStaffDirectory");
+  const assignmentStart = runtime.indexOf("export async function listStaffScheduleAssignments");
+  const operationalReads = runtime.slice(operationalStart, assignmentStart);
+  const assignmentReads = runtime.slice(assignmentStart);
+
+  assert.ok(operationalReads.indexOf('from("staff_directory")') < operationalReads.indexOf('from("organization_staff_profiles")'));
+  assert.match(operationalReads, /isMissingStaffDirectory\(canonical\.error\)/);
+  assert.match(operationalReads, /\.eq\("organization_id", organizationId\)/);
+  assert.doesNotMatch(operationalReads, /rpc\("list_staff"/);
+  assert.match(operationalReads, /membershipActive\.get\(profile\.membership_id\) === true/);
+  assert.match(operationalReads, /fullName: "Staff member"/);
+  assert.ok(assignmentReads.indexOf("staff_profile_id") < assignmentReads.lastIndexOf("staff_membership_id"));
+  assert.match(assignmentReads, /isMissingAppointmentStaffProfileId\(canonical\.error\)/);
+  assert.match(assignmentReads, /\.eq\("appointments\.branch_id", input\.branchId\)/);
+  assert.match(page, /listStaffScheduleAssignments\(\{/);
+  assert.match(page, /listOperationalStaffDirectory\(organizationId\)/);
+});

@@ -65,6 +65,8 @@ Run the SQL suite only on the local/disposable database after migration 0054. Da
 
 # Optional Staff identity coverage
 
+`tests/schema-compatibility.test.ts` covers rolling-schema detection for Command Center, Automotive work, Staff directories, and Appointment Staff assignments. Compatibility must activate only for exact missing-capability errors; authorization and unrelated database failures must remain visible. `tests/command-center.test.ts` also protects exact centavo aggregation in the pre-0054 metrics fallback.
+
 `tests/staff-profile.test.ts` covers optional/normalized contacts, explicit login invitation input, shared notification eligibility, and Core dependency direction. `supabase/tests/staff_profile_login_decoupling.sql` covers both/mobile-only/email-only/neither persistence, stable linked IDs, independent operational/access branches, pending and accepted invitation linkage, Salon appointment assignment, Automotive Job/item/work-session assignment without login, tenant denial, and strict table/contact-column privileges. No Staff notification producer is introduced in this phase; the eligibility helper reuses the existing shared channel rules for future producers.
 
 # Product experience coverage
@@ -76,3 +78,5 @@ node --import tsx --test tests/product-experience.test.ts tests/design-system.te
 ```
 
 Browser QA should inspect 320×800, 375×812, 390×844, 430×932, 640×960, 768×1024, 1024×768, 1366×768, 1440×900, and 1920×1080. Verify one primary page scroll, no clipped dialogs or horizontal overflow, usable keyboard focus, readable labels, table-to-card transitions, primary-action hierarchy, and unique semantic IDs on both Automotive and Salon organizations. Public checks must include the homepage, vertical landings, authentication/onboarding, shop page, booking request/status, invitation acceptance, and the neutral 404 surface.
+
+`tests/click-first-product-pages.test.ts` protects Reports section tabs/filter continuity, mobile daily records, Booking Request decision reachability, and Billing plan disclosure. `tests/design-system.test.ts` protects the compact five-group desktop hierarchy, subtle active state, four-item mobile navigation, grouped More popup, and sole main-content page scroll. Authenticated visual QA should additionally confirm that the common desktop menu fits at 1366×768 and that More, dialogs, and tabs remain keyboard reachable.

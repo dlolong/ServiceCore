@@ -104,6 +104,7 @@ export default async function Page({
 
         <Card id="public-services-card" className="p-5">
           <h2 className="font-semibold text-admin-text">Public services</h2>
+          <p className="mt-1 text-sm text-admin-text-muted">Only services marked Visible publicly appear in the Request Booking dropdown.</p>
           <div id="public-services-list" className="mt-4 divide-y divide-admin-border">
             {services?.map((service) => (
               <form
@@ -123,6 +124,7 @@ export default async function Page({
                 </SubmitButton>
               </form>
             ))}
+            {!services?.length ? <p id="public-services-empty-state" className="py-4 text-sm text-admin-text-muted">No active services are available. Create a service before enabling online booking.</p> : null}
           </div>
         </Card>
 

@@ -8,6 +8,7 @@ out
 *.log
 *.tsbuildinfo
 coverage
+test-results/
 reports/maintenance-backfill/
 .vercel
 supabase/.branches

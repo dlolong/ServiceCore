@@ -571,3 +571,9 @@ Ordinary staff retain the operational/My Work experience without financial total
 Public entry, shared authentication/onboarding, the Command Center, and representative Automotive and Salon operating routes now use the shared neutral NegOSu design contract. The pass preserves the approved “The Operating System for Your Negosyo.” message, vertical terminology and business behavior while reducing decorative color, excessive elevation, and competing card treatments.
 
 High-traffic Appointments, Services, Inventory, Customers, Queue, Payments, Resources, Branches, and public booking surfaces now use clearer page hierarchy, visible form labels, semantic IDs, and responsive table/card breakpoints. Auth and onboarding retain one document-level scroll. This remains a presentation-layer phase: it adds no database migration, authorization change, or domain workflow rewrite.
+
+## NegOSu UI Refinement — completed navigation and click-first pass
+
+The authenticated shell now uses a shallow Dashboard, Operations, Customers/Clients, Business, and More hierarchy. Compact collapsible groups, regular/medium menu typography, a subtle active indicator, and direct permission-filtered Staff/Branch/Resource destinations keep daily navigation scannable at 1366×768. Mobile uses Home, Bookings, Customers/Clients, and a grouped More popup instead of a long bottom bar.
+
+The shell retains one main page scroll. Sidebar and overlay scrolling are bounded fallbacks; ordinary cards and tables do not add vertical scroll regions. Existing Customer, Vehicle, Job Order, and Settings detail layouts retain shared tabs. Reports now divides secondary analysis into tabs, Billing discloses plan limits on demand, and Booking Requests keeps decision actions compact and mobile-reachable. Critical identity, state, totals, and primary actions remain visible before disclosure. No migration, RLS, authorization, or financial behavior changed.

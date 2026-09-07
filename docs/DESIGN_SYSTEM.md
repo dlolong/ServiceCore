@@ -60,11 +60,13 @@ Fields are at least 44px tall, use a visible brand focus ring, and show invalid 
 
 ## Navigation and scrolling
 
-Navigation importance is expressed by order and labelled groups, not separate colors. Inactive destinations remain neutral; the active destination alone receives brand emphasis. The shell has one primary content scroll region, an independently scrolling desktop sidebar only when needed, and mobile safe-area padding above the fixed bottom navigation.
+Navigation importance is expressed by the shallow Dashboard, Operations, Customers/Clients, Business, and More hierarchy, not separate colors. Groups have one collapsible level; active groups remain open. Desktop rows are compact and use regular/medium typography. Inactive destinations remain neutral, while the active destination uses a subtle surface and slim brand indicator.
+
+The shell uses a fixed dynamic-viewport frame. Main content owns the one page-level vertical scroll; the desktop sidebar scrolls only as a fallback on short viewports. Dialog content and the mobile More popup may have one bounded internal scroll because each is an explicit overlay. Ordinary cards and desktop tables do not own vertical scroll regions.
 
 ## Responsive behavior
 
-Shared surfaces target 320, 375, 390, and 430px mobile widths plus 1366×768 and 1440×900 desktop viewports. Controls wrap without page overflow, bottom navigation keeps only frequent destinations, tabs scroll in one line, and dialogs keep actions reachable above the virtual keyboard and safe area.
+Shared surfaces target 320, 375, 390, and 430px mobile widths plus 1366×768, 1440×900, and 1920×1080 desktop viewports. Controls wrap without page overflow. Bottom navigation is Home, Bookings, Customers/Clients, and More; tabs scroll in one line; dialogs keep actions reachable above the virtual keyboard and safe area.
 
 ## Accessibility and DOM IDs
 

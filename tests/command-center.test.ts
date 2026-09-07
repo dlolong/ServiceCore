@@ -3,11 +3,13 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 
 import {
+  calculateCommandCenterOutstanding,
   CommandCenterError,
   composeCommandCenterSnapshot,
   normalizeSharedCommandCenterRows,
   resolveCommandCenterScope,
   sortCommandCenterActions,
+  sumCommandCenterCentavos,
 } from "../modules/core/command-center/command-center.service";
 import type { CommandCenterAction, CommandCenterMembership, SharedCommandCenterSnapshot } from "../modules/core/command-center/command-center.types";
 
@@ -65,6 +67,14 @@ test("unexpected branch data and unsafe money fail closed", () => {
   assert.throws(() => normalizeSharedCommandCenterRows(scope, [{ ...baseRow, branch_id: "20000000-0000-4000-8000-000000000099" }]), CommandCenterError);
   assert.throws(() => normalizeSharedCommandCenterRows(scope, [{ ...baseRow, revenue_today_centavos: "9007199254740992" }]), CommandCenterError);
   assert.throws(() => normalizeSharedCommandCenterRows(resolveCommandCenterScope(membership, "all"), [baseRow]), /Branch not available/);
+});
+
+test("compatibility metric arithmetic preserves centavos and rejects unsafe inputs", () => {
+  assert.equal(sumCommandCenterCentavos(["9007199254740000", "500", 491]), "9007199254740991");
+  assert.equal(calculateCommandCenterOutstanding("250000", ["100000", 50000]), "100000");
+  assert.equal(calculateCommandCenterOutstanding(1000, [1200]), "0");
+  assert.throws(() => sumCommandCenterCentavos([Number.MAX_SAFE_INTEGER + 1]), CommandCenterError);
+  assert.throws(() => calculateCommandCenterOutstanding("not-money", []), CommandCenterError);
 });
 
 test("actions sort by priority, age, then stable id", () => {
