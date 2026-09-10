@@ -1,14 +1,14 @@
-# KarKR
+# NegOSu
 
-**KarKR** is a multi-tenant SaaS product for car wash, detailing, auto-care, maintenance, and automotive service businesses, powered by the internal ServiceCore platform.
+**NegOSu** is a Philippines-first, multi-tenant operating platform for service businesses. The current products are **NegOSu Automotive** and **NegOSu Salon & Beauty**. ServiceCore and KarKR remain internal/legacy engineering names where changing them would create needless migration risk.
 
-Tagline: **Your Car. Our Care.**
+Positioning: **The Operating System for Your Negosyo.**
 
-## Starter scope
+## Current scope
 This repository includes:
 - Next.js App Router + TypeScript + Tailwind;
 - Supabase browser/server client setup;
-- a responsive product shell with live CRM, service, appointment, calendar, and queue workflows;
+- a responsive product shell with Automotive and Salon operational workflows;
 - PostgreSQL/Supabase schema for organizations, branches, customers, vehicles, services, appointments, job orders, payments, inventory, subscriptions, and audit events;
 - RLS helper functions and baseline policies;
 - Codex-specific `AGENTS.md`;
@@ -28,7 +28,7 @@ Authentication, onboarding, CRM, operations, finance, inventory, retention remin
 ```bash
 nvm use
 cp .env.example .env.local
-npm install
+npm ci
 npm run dev
 ```
 Open `http://localhost:3000`.
@@ -79,7 +79,9 @@ supabase db lint --level warning
 supabase test db
 ```
 
-Browser regression checks use Playwright. Install its Chromium build where supported, then run `npm run test:e2e`. On systems where Playwright does not provide a bundled browser, set `PLAYWRIGHT_CHROME_PATH` to a compatible local Chrome executable. Set `E2E_BASE_URL` to reuse an already-running KarKR development server.
+Browser regression checks use Playwright. Install its Chromium build where supported, then run `npm run test:e2e`. On systems where Playwright does not provide a bundled browser, set `PLAYWRIGHT_CHROME_PATH` to a compatible local Chrome executable. Set `E2E_BASE_URL` to reuse an already-running NegOSu development server.
+
+Deterministic authenticated QA uses two bounded non-production owner personas and fixtures. Run the guarded persona command and release smoke suite as documented in [`docs/PILOT_QA.md`](docs/PILOT_QA.md). The command defaults to dry-run and production execution is rejected.
 
 Local authentication email is captured by Mailpit at `http://127.0.0.1:54324`; production SMTP is intentionally not configured in this repository.
 
@@ -107,13 +109,9 @@ A good first Codex command is:
 Read AGENTS.md, README.md, docs/ARCHITECTURE.md, docs/CODEX_MASTER_PROMPT.md and Phase 01 in docs/CODEX_PHASES.md. Inspect the repository, implement Phase 01 completely, run all required checks, and stop after reporting the results. Do not begin Phase 02.
 ```
 
-## Suggested deployment
-The app is cloud-neutral. A typical setup is:
-- Next.js: Vercel or Render
-- Postgres/Auth/Storage: Supabase
-- Billing: Stripe initially, with a provider abstraction for Philippine payment options later
-- Email: provider abstraction (e.g. Resend)
-- SMS: provider abstraction
+## Deployment
+
+The repository is cloud-neutral; no Render- or Vercel-specific manifest is authoritative. Deploy the Node 24 Next.js server to a compatible host and Supabase to a separately managed project. Follow [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) and [`docs/RELEASE_CHECKLIST.md`](docs/RELEASE_CHECKLIST.md). Do not auto-run seeds, resets, backfills, or destructive migration rollback during startup.
 
 ## Important
 This starter is an engineering foundation, not a finished production system. Payment, privacy, tax, invoice compliance, consent, retention, backups, and security controls must be reviewed before launch.

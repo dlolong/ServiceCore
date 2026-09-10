@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 
 import {
+  staffBranchSelectionSchema,
   staffAccessStatusLabel,
   staffContactLabel,
   staffProfileAccessSchema,
@@ -12,6 +13,15 @@ import {
 
 const staffId = "39000000-0000-4000-8000-000000000002";
 const branchId = "49000000-0000-4000-8000-000000000001";
+
+test("Staff branch selection requires an explicit scope and never silently widens access", () => {
+  assert.deepEqual(staffBranchSelectionSchema.parse({ allBranches: true, branchIds: [] }), []);
+  assert.deepEqual(staffBranchSelectionSchema.parse({ allBranches: false, branchIds: [branchId] }), [branchId]);
+  assert.equal(staffBranchSelectionSchema.safeParse({ allBranches: true, branchIds: [branchId] }).success, false);
+  assert.equal(staffBranchSelectionSchema.safeParse({ allBranches: false, branchIds: [] }).success, false);
+  assert.equal(staffBranchSelectionSchema.safeParse({ allBranches: false, branchIds: [branchId, branchId] }).success, false);
+  assert.equal(staffBranchSelectionSchema.safeParse({ allBranches: false, branchIds: ["invalid"] }).success, false);
+});
 
 test("Staff profile validation accepts absent contacts and normalizes provided contacts", () => {
   const withoutContact = staffProfileSchema.parse({ staffId: "", fullName: "  Alex Cruz  ", email: "", mobile: "", jobFunction: "", specializations: "", isActive: true, branchIds: [] });

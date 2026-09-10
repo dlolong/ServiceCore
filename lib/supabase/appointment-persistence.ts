@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
+import { appointmentPersistenceError } from "@/lib/supabase/appointment-persistence-errors";
 
 export type AppointmentPersistenceInput = {
   appointmentId: string | null;
@@ -45,10 +46,7 @@ export async function persistAppointmentWithExtension(input: AppointmentPersiste
     :{...commonPayload,p_appointment_id:input.appointmentId,p_staff_ids:input.staffAssignments.map(({staffId})=>staffId)};
   const { data: appointmentId, error } = await supabase.rpc(rpcName,payload);
   if (error || !appointmentId) {
-    const safeMessage = error?.message.includes("unavailable") || error?.message.includes("compatible")
-      ? error.message
-      : "Unable to save appointment.";
-    throw new Error(safeMessage, { cause: error });
+    throw appointmentPersistenceError(error);
   }
   return appointmentId;
 }

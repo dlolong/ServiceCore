@@ -10,6 +10,9 @@ export const metadata: Metadata = {
   title: { default: `${productBrand.name} | Business Operating System`, template: `%s | ${productBrand.name}` },
   description: productBrand.description,
   applicationName: productBrand.name,
+  icons: {
+    icon: { url: "/images/NegOSu_favicon.png", type: "image/png" },
+  },
   keywords: ["business operating system", "automotive business software", "salon management software", "appointment scheduling", "inventory management"],
   openGraph: {
     siteName: productBrand.name,

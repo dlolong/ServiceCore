@@ -9,6 +9,7 @@ import {
   isMissingAppointmentStaffProfileId,
   isMissingStaffDirectory,
   isMissingOptionalStaffRpc,
+  isMissingOrganizationStaffProfilesRelation,
   isMissingStaffProfilesRpc,
   shouldUseLegacyAutomotiveDirectoryReads,
   shouldUseLegacyAutomotiveWorkReads,
@@ -65,6 +66,22 @@ test("schema compatibility recognizes only canonical Staff capabilities", () => 
   assert.equal(isMissingAppointmentStaffProfileId({ code: "42501", message: "permission denied for appointment_staff_assignments" }), false);
   assert.equal(isMissingCanonicalStaffProfileId(missingProfileId), true);
   assert.equal(isMissingCanonicalStaffProfileId({ code: "PGRST204", message: "Could not find the email column of organization_staff_profiles" }), false);
+  assert.equal(isMissingOrganizationStaffProfilesRelation({
+    code: "PGRST205",
+    message: "Could not find the table 'public.organization_staff_profiles' in the schema cache",
+  }), true);
+  assert.equal(isMissingOrganizationStaffProfilesRelation({
+    code: "42P01",
+    message: 'relation "organization_staff_profiles" does not exist',
+  }), true);
+  assert.equal(isMissingOrganizationStaffProfilesRelation({
+    code: "PGRST205",
+    message: "Could not find the table 'public.customer_profiles' in the schema cache",
+  }), false);
+  assert.equal(isMissingOrganizationStaffProfilesRelation({
+    code: "42501",
+    message: "permission denied for organization_staff_profiles",
+  }), false);
 });
 
 test("Automotive work fallback refuses to hide unrelated database failures", () => {

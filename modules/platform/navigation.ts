@@ -51,6 +51,7 @@ export const karkrNavigation = [
 const salonNavigation = [
   { key: "dashboard", label: "Dashboard", href: "/dashboard", group: "dashboard" },
   { key: "appointments", label: "Appointments", mobileLabel: "Bookings", href: "/dashboard/appointments", group: "operations", industryFeature: "appointments", permission: "appointments.manage" },
+  { key: "bookings", label: "Booking Requests", href: "/dashboard/bookings", group: "operations", industryFeature: "booking_requests", permission: "appointments.manage" },
   { key: "customers", label: "Clients", href: "/dashboard/customers", group: "customers", permission: "customers.read" },
   { key: "services", label: "Treatments", href: "/dashboard/services", group: "business", permission: "services.manage" },
   { key: "staff", label: "Staff", href: "/dashboard/settings/staff", group: "business", permission: "settings.manage" },

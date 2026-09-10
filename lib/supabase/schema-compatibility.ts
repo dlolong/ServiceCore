@@ -60,6 +60,12 @@ export function isMissingCanonicalStaffProfileId(error: DatabaseError) {
   return text.includes("organization_staff_profiles") && /(?:column\s+)?['\"`]?id['\"`]?/.test(text);
 }
 
+/** Rolling-deployment guard for the pre-0043 database without Staff profiles. */
+export function isMissingOrganizationStaffProfilesRelation(error: DatabaseError) {
+  const missingRelation = error?.code === "PGRST205" || error?.code === "42P01";
+  return missingRelation && databaseErrorText(error).includes("organization_staff_profiles");
+}
+
 export function shouldUseLegacyAutomotiveWorkReads(errors: {
   jobs: DatabaseError;
   sessions: DatabaseError;

@@ -1,5 +1,9 @@
 # NegOSu Design System
 
+## Public plan presentation
+
+Public Plans reuse the neutral NegOSu surface, border, radius, typography, and action hierarchy. The recommended plan uses one restrained primary accent; plan availability and price are communicated with text rather than color alone. Cards stack at phone widths and do not introduce a nested scroll container.
+
 This is the implementation contract for shared NegOSu product UI. It applies to Automotive and Salon without importing either vertical into shared components.
 
 ## Colors

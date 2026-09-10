@@ -35,6 +35,15 @@ const specializationList = z.string().trim().max(1_000).transform((value, contex
   return [...new Set(values)];
 });
 
+export const staffBranchSelectionSchema = z.object({
+  allBranches: z.boolean(),
+  branchIds: z.array(z.uuid()).max(100),
+}).superRefine(({ allBranches, branchIds }, context) => {
+  if (allBranches && branchIds.length) context.addIssue({ code: "custom", message: "Choose either all branches or specific branches." });
+  if (!allBranches && !branchIds.length) context.addIssue({ code: "custom", message: "Select at least one branch, or choose all branches." });
+  if (new Set(branchIds).size !== branchIds.length) context.addIssue({ code: "custom", message: "Select each branch once." });
+}).transform(({ branchIds }) => branchIds);
+
 export const staffProfileSchema = z.object({
   staffId: z.union([z.literal(""), z.uuid()]).transform((value) => value || null),
   fullName: z.string().trim().min(1, "Enter the staff member's name.").max(120),

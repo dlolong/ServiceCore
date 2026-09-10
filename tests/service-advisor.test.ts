@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 
 import { calculateEstimateLineTotalCentavos, calculateEstimateTotals, calculatePaymentSummary, evaluateJobOrderWorkReadiness, evaluatePartsReadiness, evaluateVehicleReleaseReadiness, getRecommendedJobOrderAction } from "../modules/automotive/work-execution/service-advisor";
@@ -33,4 +34,11 @@ test("recommended action follows advisor workflow",()=>{
   assert.equal(getRecommendedJobOrderAction({status:"queued",hasEstimate:false,authorizationCurrent:false,partsStatus:"NOT_REQUIRED",balanceCentavos:0}),"PREPARE_ESTIMATE");
   assert.equal(getRecommendedJobOrderAction({status:"approved",hasEstimate:true,authorizationCurrent:true,partsStatus:"READY",balanceCentavos:0}),"START_WORK");
   assert.equal(getRecommendedJobOrderAction({status:"ready_for_release",hasEstimate:true,authorizationCurrent:true,partsStatus:"READY",balanceCentavos:5000}),"RECORD_PAYMENT");
+});
+
+test("Job Order photo upload lets React configure the server-action form encoding",()=>{
+  const page=readFileSync("app/dashboard/jobs/[jobId]/page.tsx","utf8");
+  const photoForm=page.match(/<form action=\{uploadJobPhoto\}[^>]*>/)?.[0];
+  assert.ok(photoForm,"Expected the Job Order photo upload form.");
+  assert.doesNotMatch(photoForm,/\b(?:encType|method)=/);
 });

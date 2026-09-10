@@ -1,5 +1,9 @@
 # Notifications
 
+## Launch delivery status
+
+The repository currently supports disabled delivery and a development-only console adapter. Production environment validation rejects console delivery. Email/SMS must not be described as operational until a real provider adapter, credentials, webhook/response handling, and scheduler invocation have been configured and smoke-tested. Missing Staff contact information remains non-blocking and suppresses only the unavailable channel.
+
 ## Salon appointment reminders
 
 Salon uses `SALON_APPOINTMENT_REMINDER` through the same outbox, consent checks, providers, leases, retry policy, and cron. Salon owns the email/SMS templates; both use Client/Treatment wording, assigned Staff display names, and an encrypted appointment self-service token. The deterministic key includes Appointment, customer-link identity, monotonic schedule revision, and channel. This remains unique across A→B→A reschedules and same-time link replacement. Reschedule cancels old-schedule work, and checked-in/in-service/completed/cancelled/no-show appointments cannot retain pending reminders.

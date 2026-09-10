@@ -31,6 +31,7 @@ export function MarketingHeader({ vertical }: { vertical?: SupportedVerticalKey 
           <Link id="negosu-desktop-automotive-link" href={verticalBrands.automotive.path} className="rounded-xl px-3 py-2 text-sm font-semibold text-zinc-600 hover:bg-brand-tint hover:text-brand-ink">Automotive</Link>
           <Link id="negosu-desktop-salon-link" href={verticalBrands.salon.path} className="rounded-xl px-3 py-2 text-sm font-semibold text-zinc-600 hover:bg-brand-tint hover:text-brand-ink">Salon &amp; Beauty</Link>
           <Link id="negosu-desktop-features-link" href="/#features" className="rounded-xl px-3 py-2 text-sm font-semibold text-zinc-600 hover:bg-brand-tint hover:text-brand-ink">Features</Link>
+          <Link id="negosu-desktop-plans-link" href="/plans" className="rounded-xl px-3 py-2 text-sm font-semibold text-zinc-600 hover:bg-brand-tint hover:text-brand-ink">Plans</Link>
         </nav>
 
         <div className="hidden items-center gap-2 sm:flex">
@@ -47,6 +48,7 @@ export function MarketingHeader({ vertical }: { vertical?: SupportedVerticalKey 
             <Link id="negosu-mobile-automotive-link" href={verticalBrands.automotive.path} className="block min-h-11 rounded-xl px-3 py-3 text-sm font-semibold text-zinc-600 hover:bg-zinc-50">Automotive</Link>
             <Link id="negosu-mobile-salon-link" href={verticalBrands.salon.path} className="block min-h-11 rounded-xl px-3 py-3 text-sm font-semibold text-zinc-600 hover:bg-zinc-50">Salon &amp; Beauty</Link>
             <Link id="negosu-mobile-features-link" href="/#features" className="block min-h-11 rounded-xl px-3 py-3 text-sm font-semibold text-zinc-600 hover:bg-zinc-50">Features</Link>
+            <Link id="negosu-mobile-plans-link" href="/plans" className="block min-h-11 rounded-xl px-3 py-3 text-sm font-semibold text-zinc-600 hover:bg-zinc-50">Plans</Link>
             <div className="mt-2 grid gap-2 border-t border-zinc-100 pt-2">
               <Link id="negosu-mobile-sign-in-link" href={loginPath} className="inline-flex min-h-11 items-center justify-center rounded-xl border border-zinc-200 px-4 text-sm font-bold">Sign In</Link>
               <Link id="negosu-mobile-start-free-button" href={signupPath} className="inline-flex min-h-11 items-center justify-center rounded-xl bg-brand-primary px-4 text-sm font-bold text-white">Start Free</Link>
@@ -156,6 +158,7 @@ export function MarketingFooter() {
         <nav className="flex flex-wrap gap-x-5 gap-y-2" aria-label="Footer navigation">
           <Link id="negosu-footer-automotive-link" href={verticalBrands.automotive.path}>Automotive</Link>
           <Link id="negosu-footer-salon-link" href={verticalBrands.salon.path}>Salon &amp; Beauty</Link>
+          <Link id="negosu-footer-plans-link" href="/plans">Plans</Link>
           <Link id="negosu-footer-sign-in-link" href="/login">Sign In</Link>
           <Link id="negosu-footer-start-free-link" href="/signup">Start Free</Link>
         </nav>

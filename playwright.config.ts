@@ -1,6 +1,9 @@
 import { defineConfig, devices } from "@playwright/test";
 
-const baseURL=process.env.E2E_BASE_URL??"http://127.0.0.1:3100";
+const defaultBaseUrl = "http://127.0.0.1:3100";
+const baseURL = process.env.E2E_BASE_URL ?? defaultBaseUrl;
+const usesOperatorManagedServer = Boolean(process.env.E2E_BASE_URL);
+
 export default defineConfig({
   testDir: "./e2e",
   fullyParallel: true,
@@ -11,14 +14,17 @@ export default defineConfig({
     trace: "retain-on-failure",
     launchOptions: process.env.PLAYWRIGHT_CHROME_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROME_PATH } : undefined,
   },
-  webServer: {
+  webServer: usesOperatorManagedServer ? undefined : {
     command: "npm run dev -- --hostname 127.0.0.1 --port 3100",
-    url: `${baseURL}/login`,
-    reuseExistingServer: true,
+    url: `${defaultBaseUrl}/health`,
+    reuseExistingServer: false,
     timeout: 120_000,
   },
   projects: [
     { name: "desktop-chromium", use: { ...devices["Desktop Chrome"] } },
-    { name: "mobile-chromium", use: { ...devices["Pixel 7"] } },
+    { name: "mobile-320", use: { ...devices["iPhone 13"], viewport: { width: 320, height: 720 } } },
+    { name: "mobile-375", use: { ...devices["iPhone 13"], viewport: { width: 375, height: 812 } } },
+    { name: "mobile-390", use: { ...devices["iPhone 13"], viewport: { width: 390, height: 844 } } },
+    { name: "mobile-430", use: { ...devices["iPhone 13"], viewport: { width: 430, height: 932 } } },
   ],
 });

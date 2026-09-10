@@ -66,6 +66,8 @@ List/detail → Edit dialog → Save → current context
 
 Large workflows—Job Orders, inspections, estimates, invoices, and multi-section operational details—remain dedicated pages.
 
+Appointment and walk-in forms provide explicit Create and Cancel buttons for inline Customer/Client and Vehicle entry. Creating a record selects its saved ID without submitting the visit or clearing the appointment draft. Vehicles are limited to the selected customer; changing customers clears the previous vehicle selection. Salon forms provide Client creation and omit Vehicle controls. Creation errors stay beside the fields, and pending submissions disable their buttons.
+
 ## Filters and actions
 
 Search is first and visible. Common status/branch controls follow it. Rare controls belong under a compact More filters disclosure when needed. Preserve search, status, branch, and page in links that launch dialogs. Use one visible primary row action; lower-frequency or consequential actions belong in a clearly labelled overflow or confirmation.
@@ -94,6 +96,10 @@ The dashboard shell owns the primary vertical scroll region. `html`/`body` must 
 Complex Job Orders use compact top-level Overview and Work & approvals tabs plus contextual section links and a sticky desktop Service Advisor panel. On mobile the panel participates in the single page flow. Add/edit estimate lines, authorization, and payment are focused dialogs; never nest these dialogs. The first viewport should expose identity, status, estimate, authorization, parts, balance, blockers, and the recommended next action.
 
 Reports keep the shared summary and filters visible, then use Overview, Revenue, Team, and conditional Branches tabs for secondary analysis. Billing keeps current access, price, and plan actions visible while placing detailed limits/features in native disclosure controls. Booking Requests keep decision actions directly reachable and stack them on narrow screens.
+
+Public Plans use the same `modules/platform/plan-catalog.ts` presentation contract as authenticated Billing. The landing page provides an in-page comparison and links to `/plans`; public cards keep price, intended customer, important inclusions, and a clear signup or contact action visible without opening another control. Pricing copy must not imply that Automotive-only Job Order limits are Salon Appointment limits or promise vertical-specific capabilities to an industry where they are unavailable. Cross-industry cards use shared terminology such as Customers or Clients and Services or Treatments; additional capabilities are explicitly qualified by industry.
+
+Onboarding shows one data-derived recommended next step at a time while retaining the complete checklist. Optional setup never traps the owner: **Skip for now and open dashboard** remains explicit. Empty operational lists explain why the area matters and, when the actor has permission, expose the next useful action directly.
 
 Job Order Parts use a desktop table and mobile cards with Required, Reserved, Consumed, Available, Shortage, and Status values. Reserve, usage, and release are focused dialogs on the Job Order route. On hand is labeled as physical stock; released allocation must never be presented as a stock receipt.
 
@@ -131,3 +137,15 @@ Maintenance uses a compact desktop table and mobile cards. Keep due-status count
 At 1366×768, keep business identity, operational date, branch selector, four to six compact metrics, Action Inbox preview, and the start of Today's Operations in the first viewport. On 320, 375, 390, and 430 pixel widths use two metric columns, then actions, then a vertical operations list. Do not introduce horizontal desktop tables or nested page scrolling on mobile.
 
 Use the stable roots `negosu-command-center-page`, `negosu-command-center-header`, `negosu-command-center-branch-selector`, `negosu-command-center-metrics`, `negosu-action-inbox`, `negosu-today-operations`, `negosu-staff-snapshot`, `negosu-branch-performance`, and `negosu-command-center-quick-actions`. Repeated action IDs derive from the stable business/action identifier.
+
+## Customer queue display
+
+The Automotive Queue and Salon Appointments headers provide **Open queue display**. It opens `/display/queue/[branchId]` in a separate window with a Fullscreen control and no dashboard navigation. A signed-in staff session with branch access is required. The window remains pinned to its branch when the operator changes dashboard branches.
+
+The display refreshes every 10 seconds and uses the branch's local day. Automotive shows waiting ticket numbers and called/ready tickets. Salon shows checked-in clients waiting and clients in service, using first names plus last initials and appointment times. Scheduled and finished appointments are excluded. Large queues rotate through pages automatically; short windows scroll vertically.
+
+The server checks access on every refresh and returns only display fields. Customer contact details, plates, prices, and notes are excluded. Responses are private, uncached, and excluded from indexing. Access loss clears the queue; temporary connection failures retain today's snapshot with its last update time. Rows from the previous local day are cleared even when disconnected. This feature requires no database migration or anonymous public access policy.
+
+Published Salon storefronts also provide **View customer queue** in the hero and each branch card. This opens `/shop/[slug]/queue?branch=[branchId]` in a separate window, reusing the same fullscreen display, refresh interval, and paging. Customers do not sign in. The branch selector switches among the storefront's active branches, and **Salon page** returns to the storefront. Only today's checked-in and in-service clients appear, with first names plus last initials and appointment times.
+
+The public route uses migration `0065_public_salon_queue.sql` and a narrow anonymous RPC rather than granting access to appointment/customer tables. Publication, active organization, Salon industry, and branch ownership are checked on every read. Unpublishing or deactivating a branch makes subsequent refreshes unavailable and clears displayed rows. The staff-operated display remains available to authorized staff independently of public-page publication.

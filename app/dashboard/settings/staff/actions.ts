@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 
 import {
+  staffBranchSelectionSchema,
   staffProfileAccessSchema,
   staffProfileInvitationSchema,
   staffProfileSchema,
@@ -24,7 +25,12 @@ function go(kind: "message" | "error", message: string): never {
 }
 
 function branchIds(data: FormData) {
-  return data.get("allBranches") === "on" ? [] : data.getAll("branchIds");
+  const parsed = staffBranchSelectionSchema.safeParse({
+    allBranches: data.get("allBranches") === "on",
+    branchIds: data.getAll("branchIds"),
+  });
+  if (!parsed.success) go("error", firstError(parsed.error));
+  return parsed.data;
 }
 
 export async function saveStaffProfile(data: FormData) {

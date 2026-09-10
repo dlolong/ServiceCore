@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { selectedValues } from "../lib/operations";
 
 import { saveAutomotiveAppointment } from "../modules/automotive/scheduling/automotive-scheduling.service";
 import {
@@ -45,6 +46,50 @@ test("core scheduling saves a valid appointment without vehicle data", async () 
 
   assert.equal(result, "appointment-id");
   assert.equal("vehicleId" in (persistedInput ?? {}), false);
+});
+
+for (const [staffId, resourceId] of [
+  ["", ""],
+  ["33000000-0000-4000-8000-000000000001", ""],
+  ["", "93000000-0000-4000-8000-000000000001"],
+  ["33000000-0000-4000-8000-000000000001", "93000000-0000-4000-8000-000000000001"],
+]) {
+  test(`appointment form saves with staff ${staffId ? "assigned" : "unassigned"} and resource ${resourceId ? "assigned" : "unassigned"}`, async () => {
+    const data = new FormData();
+    data.set("staffIds", staffId);
+    data.set("resourceIds", resourceId);
+    const input = {
+      ...coreInput,
+      staffAssignments: selectedValues(data, "staffIds").map(staffId => ({ staffId })),
+      resourceAssignments: selectedValues(data, "resourceIds").map(resourceId => ({ resourceId })),
+    };
+    const result = await saveAppointmentWithPersistence(input, async (saved) => {
+      assert.deepEqual(saved.staffAssignments, staffId ? [{ staffId }] : []);
+      assert.deepEqual(saved.resourceAssignments, resourceId ? [{ resourceId }] : []);
+      return "saved-appointment";
+    }, coreDependencies());
+    assert.equal(result, "saved-appointment");
+  });
+}
+
+test("appointment validation gives actionable errors and never persists malformed selections", async () => {
+  for (const [changes, message] of [
+    [{ customerId: "" }, "Select an existing customer or create one."],
+    [{ serviceIds: [] }, "Select at least one service."],
+    [{ staffAssignments: [{ staffId: "not-a-uuid" }] }, "Select a valid staff member or leave staff unassigned."],
+    [{ resourceAssignments: [{ resourceId: "not-a-uuid" }] }, "Select a valid resource or leave it unassigned."],
+  ] as const) {
+    let persisted = false;
+    await assert.rejects(saveAppointmentWithPersistence({ ...coreInput, ...changes } as SaveAppointmentInput, async () => {
+      persisted = true;
+      return "unexpected";
+    }, coreDependencies()), { name: "SchedulingError", message });
+    assert.equal(persisted, false);
+  }
+  const data = new FormData();
+  data.append("staffIds", "");
+  data.append("staffIds", "malformed-id");
+  assert.deepEqual(selectedValues(data, "staffIds"), ["malformed-id"]);
 });
 
 test("core scheduling denies a membership from another organization", async () => {

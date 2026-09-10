@@ -38,6 +38,7 @@ NegOSu                       Commercial SaaS brand
 | `/` | Master NegOSu landing and supported-industry selector |
 | `/automotive` | NegOSu Automotive solution |
 | `/salon` | NegOSu Salon & Beauty solution |
+| `/plans` | Shared NegOSu plans and Philippine-peso pricing |
 | `/signup` | Shared account and business setup |
 | `/login` | Shared authentication |
 

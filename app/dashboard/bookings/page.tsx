@@ -6,13 +6,14 @@ import { SubmitButton } from "@/components/submit-button";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { getDashboardContext } from "@/lib/auth/context";
+import { roleHasPermission } from "@/lib/rbac";
 import { createClient } from "@/lib/supabase/server";
 
 type BookingRequest = {
   id: string;
   customer_name: string;
-  vehicle_make: string;
-  vehicle_model: string;
+  vehicle_make: string | null;
+  vehicle_model: string | null;
   phone: string;
   email: string | null;
   public_reference: string;
@@ -60,7 +61,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ m
             <Card id={`booking-request-card-${request.id}`} className="p-4 sm:p-5" key={request.id}>
               <div className="flex min-w-0 flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <strong className="block break-words font-medium">{request.customer_name} · {request.vehicle_make} {request.vehicle_model}</strong>
+                  <strong className="block break-words font-medium">{request.customer_name}{activeMembership.industry === "automotive" ? ` · ${request.vehicle_make ?? ""} ${request.vehicle_model ?? ""}` : ""}</strong>
                   <small className="mt-1 block break-words text-zinc-500">
                     {request.phone}{request.email ? ` · ${request.email}` : ""} · {request.public_reference}
                   </small>
@@ -78,7 +79,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ m
                 }).format(new Date(request.preferred_at))}
               </p>
               {request.customer_note ? <p className="mt-2 rounded-lg bg-zinc-50 p-3 text-sm">{request.customer_note}</p> : null}
-              {request.status === "requested" ? (
+              {request.status === "requested" && roleHasPermission(activeMembership.role, "appointments.manage") ? (
                 <div className="mt-4 grid gap-3 border-t border-zinc-100 pt-4 sm:flex sm:flex-wrap sm:items-end">
                   <form id={`booking-request-confirm-form-${request.id}`} action={reviewBooking}>
                     <input type="hidden" name="id" value={request.id} />

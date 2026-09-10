@@ -48,7 +48,7 @@ select plan(72);
 select is((select industry from organizations where id='5b200000-0000-4000-8000-000000000002'),'automotive','Automotive organization remains explicit');
 select throws_ok($$insert into organizations(name,slug,industry) values('Bad','bad-industry','unknown')$$,'23514',null,'unsupported industry is constrained');
 set local session_replication_role=replica;
-select throws_ok($$update organizations set public_page_enabled=true where id='5b200000-0000-4000-8000-000000000001'$$,'23514',null,'Salon cannot enable the vehicle-centric public booking storefront');
+select lives_ok($$update organizations set public_page_enabled=true where id='5b200000-0000-4000-8000-000000000001'$$,'Salon can publish its vehicle-free public booking storefront');
 set local session_replication_role=origin;
 
 set local role authenticated;

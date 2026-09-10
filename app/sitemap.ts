@@ -12,6 +12,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   return [
     { url: clientEnv.NEXT_PUBLIC_APP_URL, lastModified, changeFrequency: "weekly", priority: 1 },
+    { url: `${clientEnv.NEXT_PUBLIC_APP_URL}/plans`, lastModified, changeFrequency: "weekly", priority: 0.9 },
     ...Object.values(verticalBrands).map(({ path }) => ({
       url: `${clientEnv.NEXT_PUBLIC_APP_URL}${path}`,
       lastModified,

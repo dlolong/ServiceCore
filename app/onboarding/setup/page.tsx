@@ -16,6 +16,7 @@ export default async function OnboardingSetupPage() {
     Promise.resolve(onboardingForIndustry(industry)),
   ]);
   const progress = calculateOnboardingProgress(config, signals);
+  const nextStep = config.steps.find((step) => !signals[step.key]);
 
   return (
     <main id="negosu-onboarding-page" className="min-h-dvh bg-slate-50 px-4 py-8 sm:px-6 sm:py-12">
@@ -35,6 +36,10 @@ export default async function OnboardingSetupPage() {
             <div className="h-full rounded-full bg-brand-primary" style={{ width: `${progress.percentage}%` }} />
           </div>
         </section>
+        {nextStep ? <aside id="negosu-onboarding-next-step" className="mt-4 flex flex-col gap-3 rounded-xl border border-blue-200 bg-blue-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div><p className="text-xs font-semibold text-brand-primary-strong">Recommended next step</p><p className="mt-1 font-semibold">{nextStep.label}</p><p className="mt-1 text-sm text-zinc-600">{nextStep.description}</p></div>
+          <Button asChild><Link id="negosu-onboarding-next-step-link" href={nextStep.href}>Set up now <ArrowRight aria-hidden="true" size={16} /></Link></Button>
+        </aside> : <aside id="negosu-onboarding-complete" className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4"><p className="font-semibold text-emerald-800">Your essential setup is complete.</p><p className="mt-1 text-sm text-emerald-700">Open the dashboard and start managing today&apos;s work.</p></aside>}
         <div id="negosu-onboarding-steps" className="mt-5 grid gap-3 sm:grid-cols-2">
           {config.steps.map((step) => {
             const complete = signals[step.key];
@@ -48,7 +53,7 @@ export default async function OnboardingSetupPage() {
         </div>
         <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-xs leading-5 text-zinc-500">Progress is derived from your current business data. There are no separate completion switches to maintain.</p>
-          <Button asChild><Link id="negosu-onboarding-open-dashboard" href="/dashboard">Open dashboard</Link></Button>
+          <Button asChild variant="secondary"><Link id="negosu-onboarding-open-dashboard" href="/dashboard">{nextStep ? "Skip for now and open dashboard" : "Open dashboard"}</Link></Button>
         </div>
       </section>
     </main>

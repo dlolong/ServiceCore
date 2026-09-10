@@ -23,9 +23,9 @@ test("Core does not import the Salon vertical",()=>{
   }
 });
 
-test("Automotive public-page actions enforce their industry at the action boundary",()=>{
+test("Shared public-page actions enforce supported industry features at the action boundary",()=>{
   const source=readFileSync(new URL("../app/dashboard/settings/public-page/actions.ts",import.meta.url),"utf8");
-  assert.match(source,/requireAutomotiveContext/);
+  assert.match(source,/requireIndustryFeature\("booking_requests"\)/);
   assert.doesNotMatch(source,/from["']@\/lib\/auth\/context["']/);
 });
 

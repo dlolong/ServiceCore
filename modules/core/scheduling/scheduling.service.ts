@@ -4,13 +4,13 @@ import { evaluateAppointmentAvailability,evaluateAppointmentAvailabilityInputSch
 const nullableText = (maximumLength: number) => z.string().trim().max(maximumLength).nullable().optional().transform((value) => value || null);
 
 export const saveAppointmentInputSchema = z.object({
-  appointmentId: z.uuid().nullable(),
-  organizationId: z.uuid(),
-  branchId: z.uuid(),
-  customerId: z.uuid(),
-  serviceIds: z.array(z.uuid()).min(1),
-  staffAssignments: z.array(z.object({ staffId: z.uuid() })).default([]),
-  resourceAssignments: z.array(z.object({ resourceId: z.uuid() })).default([]),
+  appointmentId: z.uuid({ error: "Select a valid appointment to edit." }).nullable(),
+  organizationId: z.uuid({ error: "Select an active organization." }),
+  branchId: z.uuid({ error: "Select an active branch." }),
+  customerId: z.uuid({ error: "Select an existing customer or create one." }),
+  serviceIds: z.array(z.uuid({ error: "Select valid services." })).min(1, { error: "Select at least one service." }),
+  staffAssignments: z.array(z.object({ staffId: z.uuid({ error: "Select a valid staff member or leave staff unassigned." }) })).default([]),
+  resourceAssignments: z.array(z.object({ resourceId: z.uuid({ error: "Select a valid resource or leave it unassigned." }) })).default([]),
   scheduledStart: z.iso.datetime({ offset: true }),
   allowAppointmentConflict: z.boolean().optional().default(false),
   customerNote: nullableText(1000),

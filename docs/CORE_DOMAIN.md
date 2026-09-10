@@ -1,5 +1,9 @@
 # Core Domain
 
+## Launch boundary note
+
+Public pricing and release tooling are platform concerns, not Core business entities. Core continues to own shared service-business records and authorization-aware operations; Automotive and Salon remain downstream verticals. The launch-candidate work added no vehicle, treatment, provider, or deployment concepts to Core domain models.
+
 Core Appointment Self-Service owns hash-token mechanics and an allowlisted public DTO. Vertical adapters opt in and own customer wording. Public rescheduling repeats authoritative branch, service, Staff, Resource, and overlap checks rather than updating a timestamp directly.
 
 Core Payments understands organization, branch, amount, method, status, and an explicit business reference. Automotive invoice payments and Salon Appointment payments share the ledger; Core does not require a Vehicle, Job Order, or invoice for an Appointment payment. Appointment totals come from persisted service-price snapshots, never browser input.

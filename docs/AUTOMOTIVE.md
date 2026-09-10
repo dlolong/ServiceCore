@@ -1,5 +1,9 @@
 # NegOSu Automotive Domain
 
+## Pilot smoke coverage
+
+The authenticated release smoke covers the Automotive owner Dashboard, Appointments, Customers, Vehicles, Job Orders, Inventory, Payments, Staff, and Billing on desktop and mobile. This is route-level launch evidence; the existing domain and database suites remain authoritative for workflow transitions, tenant isolation, idempotency, and financial rules.
+
 NegOSu Automotive is the customer-facing vertical name. `KarKR`, `automotive`, and existing Automotive symbols remain internal or compatibility terminology; they are not being mass-renamed. ServiceCore remains the internal shared-platform name.
 
 Salon standalone completion does not weaken the KarKR path. The generic Appointment transition no longer exposes direct completion; `transition_salon_appointment` verifies a Salon organization. KarKR checked-in appointments continue through Queue, Job Order execution, inspection, QC, payment, and release.

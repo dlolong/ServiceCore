@@ -1,5 +1,9 @@
 # Industry Modules
 
+## Launch verification
+
+The guarded non-production QA fixture creates one Automotive owner tenant and one Salon owner tenant so both vertical route sets can be exercised through real authentication. The shared release smoke asserts that each persona sees working routes for its own industry. This fixture is test infrastructure only, is blocked in production, and does not weaken server-side industry gates.
+
 NegOSu is the commercial master brand. Its supported customer-facing solutions are NegOSu Automotive and NegOSu Salon & Beauty. ServiceCore, KarKR, `automotive`, and `salon` remain stable internal architecture or compatibility terms where renaming would not add customer value.
 
 ## Product entry configuration

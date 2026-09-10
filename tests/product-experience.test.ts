@@ -79,7 +79,7 @@ test("inventory and CRM forms expose visible labels and stable operational IDs",
 
 test("public booking and neutral fallback surfaces expose semantic roots and brand copy", () => {
   const shop = source("app/shop/[slug]/page.tsx");
-  const booking = source("app/shop/[slug]/book/page.tsx");
+  const booking = source("app/shop/[slug]/book/page.tsx") + source("app/shop/[slug]/book/booking-form.tsx");
   const status = source("app/booking/[token]/page.tsx");
   const notFound = source("app/not-found.tsx");
   for (const id of ["public-automotive-shop-page", "public-automotive-shop-book-button"]) assert.match(shop, new RegExp(id));
@@ -118,7 +118,7 @@ test("public page settings use labelled controls and deterministic management ID
 });
 
 test("public booking handles an empty published-service catalog without rendering a broken request form", () => {
-  const booking = source("app/shop/[slug]/book/page.tsx");
+  const booking = source("app/shop/[slug]/book/page.tsx") + source("app/shop/[slug]/book/booking-form.tsx");
   assert.match(booking, /const hasPublicServices = shop\.services\.length > 0/);
   assert.match(booking, /public-booking-no-services/);
   assert.match(booking, /No services are currently published for online booking/);

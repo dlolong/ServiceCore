@@ -1,5 +1,13 @@
 # Testing
 
+Public Salon queues are covered by `tests/public-queue-display.test.ts` (validated RPC scope, unavailable/error behavior, cache headers) and `supabase/tests/public_salon_queue.sql` (anonymous access, abbreviated projection, branch/day/status isolation, publication revocation, and preserved RLS). Browser checks should follow the storefront popup link without logging in, switch branches, observe a check-in/service update, toggle fullscreen, check mobile overflow, and unpublish the fixture to verify rows clear on refresh. Existing `tests/queue-display.test.ts` protects staff display behavior.
+
+Salon public booking uses `tests/public-booking.test.ts` for industry-specific visitor validation, branch-local dates, and settings inputs, plus `supabase/tests/salon_public_booking.sql` for anonymous submission, published service/branch scope, full-duration availability, duplicate protection, authorized confirmation, vehicle-free appointments, and price/duration snapshots. Run the existing `phase10_public_booking_security.sql` and `salon_vertical_foundation.sql` suites after migration `0064` for backward compatibility. Browser verification should publish a synthetic Salon page and treatment through Settings, submit anonymously, correct invalid input without losing the selected time/contact details, confirm as staff, and inspect the private status link. Race two confirmations for one branch/time against a disposable database and require exactly one appointment. Use only local/disposable fixtures and remove them afterward.
+
+## Release and authenticated smoke
+
+`tests/release-readiness.test.ts` protects Node/release script contracts, local-only-by-default QA seed guards, production rejection, explicit remote-development confirmation, and cloud-neutral deployment documentation. `e2e/release-smoke.spec.ts` covers public entry routes and `/health`; after the guarded QA persona seed, `E2E_AUTHENTICATED=1` enables Automotive and Salon owner route smoke across the configured desktop and mobile projects. See `PILOT_QA.md` for exact commands and test-only credentials.
+
 `tests/salon-operations.test.ts` covers the named Salon lifecycle, token/hash contract, neutral payment summary, reminder wording, and dependency direction. The Salon pgTAP suite covers job-function/role separation, Automotive-negative completion, public DTO/table denial, confirmation/reschedule, Appointment overpayment/reversal, and tenant boundaries.
 
 The practical validation ladder is:

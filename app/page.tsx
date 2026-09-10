@@ -3,6 +3,7 @@ import { ArrowRight, Boxes, CalendarDays, CarFront, CheckCircle2, CreditCard, Sc
 import Link from "next/link";
 
 import { MarketingCta, MarketingFooter, MarketingHeader } from "@/components/marketing/product-landing";
+import { PublicPlanCatalog } from "@/components/marketing/plan-catalog";
 import { productBrand, verticalBrands } from "@/modules/platform/brand";
 
 export const metadata: Metadata = {
@@ -112,6 +113,8 @@ export default function NegOSuLandingPage() {
           <div className="mt-7 divide-y divide-zinc-200 rounded-2xl border border-zinc-200 bg-white px-5">{faqs.map(([question, answer], index) => <details id={`negosu-faq-item-${index + 1}`} key={question} className="group py-5"><summary className="cursor-pointer list-none font-black marker:content-none">{question}<span aria-hidden="true" className="float-right ml-3 text-zinc-400 group-open:rotate-45">+</span></summary><p className="mt-3 max-w-3xl text-sm leading-6 text-zinc-600">{answer}</p></details>)}</div>
         </div>
       </section>
+
+      <PublicPlanCatalog compact />
 
       <MarketingCta title="Ready to run your business with less friction?" description="Create your NegOSu account, choose Automotive or Salon & Beauty, and set up the workspace that matches your operation." />
       <MarketingFooter />

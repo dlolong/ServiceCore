@@ -60,7 +60,7 @@ export default async function StaffPage({ searchParams }: { searchParams: Promis
   const [staffResult, branchResult, invitationResult, assignmentResult] = await Promise.all([
     loadStaffManagementDirectory(activeMembership.organizationId)
       .then((data) => ({ data, error: false }))
-      .catch(() => ({ data: { items: [] as StaffProfileRow[], supportsIndependentProfiles: true } satisfies StaffManagementDirectory, error: true })),
+      .catch(() => ({ data: { items: [] as StaffProfileRow[], supportsIndependentProfiles: false } satisfies StaffManagementDirectory, error: true })),
     supabase.from("branches").select("id,name").eq("organization_id", activeMembership.organizationId).eq("is_active", true).order("name"),
     supabase.from("staff_invitations").select("id,email,role,status,expires_at,created_at").eq("organization_id", activeMembership.organizationId).order("created_at", { ascending: false }),
     listStaffScheduleAssignments({
@@ -70,7 +70,7 @@ export default async function StaffPage({ searchParams }: { searchParams: Promis
       endsAt: window.end.toISOString(),
     }).then((data) => ({ data, error: false })).catch(() => ({ data: [] as StaffScheduleAssignment[], error: true })),
   ]);
-  const profileManagementAvailable = staffResult.data.supportsIndependentProfiles;
+  const profileManagementAvailable = !staffResult.error && !branchResult.error && staffResult.data.supportsIndependentProfiles;
   const branches = (branchResult.data ?? []) as StaffBranch[];
   const schedules = scheduleByStaff(assignmentResult.data);
   const staff = staffResult.data.items.map((profile) => ({
@@ -83,7 +83,7 @@ export default async function StaffPage({ searchParams }: { searchParams: Promis
   }));
   const selected = staff.find(({ id }) => id === parameters.staffId);
   const selectionError = !profileManagementAvailable && parameters.dialog
-    ? "Staff profile tools are temporarily unavailable while this workspace is being updated."
+    ? "Staff changes are currently unavailable. Please try again or contact your administrator."
     : (parameters.dialog === "edit" || parameters.dialog === "access") && !selected
     ? "Staff profile not found."
     : parameters.dialog === "access" && selected?.role === "owner" ? "Owner system access is protected." : undefined;
@@ -92,10 +92,10 @@ export default async function StaffPage({ searchParams }: { searchParams: Promis
   return <main id={`${prefix}-page`} className="mx-auto min-w-0 max-w-7xl">
     <PageHeader id={`${prefix}-page-header`} eyebrow="Organization team" title="Staff" description="Manage operational Staff profiles independently from login access." action={profileManagementAvailable ? <Button id={`${prefix}-create-button`} asChild><Link href="/dashboard/settings/staff?dialog=create"><Plus size={17}/>Add Staff</Link></Button> : undefined}/>
     <FormMessage error={parameters.error ?? selectionError ?? loadError} message={parameters.message}/>
-    {!profileManagementAvailable ? <Card id={`${prefix}-compatibility-notice`} className="mt-5 border-status-warning/25 bg-status-warning-tint p-4 text-sm text-status-warning">Staff records are available in read-only mode while profile tools are being updated. Existing staff and system access remain unchanged.</Card> : null}
+    {!staffResult.error && !staffResult.data.supportsIndependentProfiles ? <Card id={`${prefix}-compatibility-notice`} className="mt-5 border-status-warning/25 bg-status-warning-tint p-4 text-sm text-status-warning">Staff records are available in read-only mode. An administrator needs to complete the workspace setup to enable profile changes. Existing staff and system access remain unchanged.</Card> : null}
     {parameters.invite ? <Card id={`${prefix}-invitation-link`} className="mt-5 border-brand-border bg-brand-tint p-5"><h2 className="font-semibold">Secure invitation link</h2><p className="mt-1 text-sm text-slate-600">Send this link only to the login email entered for this invitation. It expires automatically and can be used once.</p><code id={`${prefix}-invitation-link-value`} className="mt-3 block break-all rounded-lg bg-white p-3 text-sm">{parameters.invite}</code></Card> : null}
 
-    <section id={`${prefix}-directory`} className="mt-5 rounded-2xl border border-admin-border bg-white p-4 shadow-sm sm:p-5"><div><h2 className="font-semibold">Staff directory</h2><p className="text-sm text-slate-600">Contact details are optional. Operational status and system access are managed separately.</p></div><StaffDirectoryViews staff={staff} branches={branches} timezone={activeMembership.timezone} industry={industry} prefix={prefix} managementAvailable={profileManagementAvailable}/></section>
+    <section id={`${prefix}-directory`} className="mt-5 rounded-2xl border border-admin-border bg-white p-4 shadow-sm sm:p-5"><div><h2 className="font-semibold">Staff directory</h2><p className="text-sm text-slate-600">Contact details are optional. Operational status and system access are managed separately.</p></div>{staffResult.error ? <p id={`${prefix}-load-error`} role="alert" className="mt-4 text-sm text-slate-600">The Staff directory could not be loaded. <Link href="/dashboard/settings/staff" className="font-semibold underline">Try again</Link></p> : <StaffDirectoryViews staff={staff} branches={branches} timezone={activeMembership.timezone} industry={industry} prefix={prefix} managementAvailable={profileManagementAvailable}/>}</section>
 
     <InvitationHistory invitations={(invitationResult.data ?? []) as InvitationRow[]} timezone={activeMembership.timezone} industry={industry} prefix={prefix}/>
     <PermissionMatrix industry={industry} prefix={prefix}/>

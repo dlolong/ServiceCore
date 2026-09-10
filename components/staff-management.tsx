@@ -12,6 +12,7 @@ import {
   staffJobFunctionSuggestions,
 } from "@/app/dashboard/settings/staff/staff-forms";
 import { SubmitButton } from "@/components/submit-button";
+import { StaffBranchFieldset as BranchFieldset } from "@/components/staff-branch-fieldset";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { displayPhone } from "@/lib/crm";
@@ -144,7 +145,7 @@ export function StaffDirectoryViews({ staff, branches, timezone, industry, prefi
   const tableId = industry === "salon" ? "salon-staff-table" : "staff-table";
   const mobileListId = industry === "salon" ? "salon-staff-mobile-list" : "staff-mobile-list";
   if (!staff.length) return <div id={`${prefix}-empty-state`} className="mt-4 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
-    <h2 className="font-semibold">No Staff profiles yet</h2><p className="mt-1 text-sm text-slate-600">Add a Staff profile now. Login access can be granted later.</p>
+    <h2 className="font-semibold">No Staff profiles yet</h2><p className="mt-1 text-sm text-slate-600">{managementAvailable ? "Add a Staff profile now. Login access can be granted later." : "Staff profiles will appear here when available."}</p>
   </div>;
   return <>
     <div id={tableContainerId} className="mt-4 hidden overflow-hidden rounded-2xl border border-admin-border bg-white shadow-sm md:block">
@@ -183,13 +184,6 @@ function RoleSelect({ id, name, defaultValue, industry }: { id: string; name: st
     <select id={id} name={name} defaultValue={defaultValue} className="mt-2 min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3">{staffRoleOptionsForIndustry(industry).map((role) => <option key={role.value} value={role.value}>{role.label}</option>)}</select>
     <span className="mt-1 block text-xs font-normal text-slate-500">Permissions are separate from the Staff job function.</span>
   </label>;
-}
-
-function BranchFieldset({ id, branches, selected, label }: { id: string; branches: StaffBranch[]; selected: string[]; label: string }) {
-  return <fieldset id={id} className="rounded-xl border border-slate-300 p-3 sm:col-span-2"><legend className="px-1 text-sm font-semibold">{label}</legend>
-    <label className="flex min-h-9 items-center gap-2 text-sm"><input id={`${id}-all-checkbox`} type="checkbox" name="allBranches" defaultChecked={!selected.length}/> All current and future branches</label>
-    <div className="grid gap-1 sm:grid-cols-2">{branches.map((branch) => <label className="flex min-h-9 items-center gap-2 text-sm" key={branch.id}><input id={`${id}-${branch.id}-checkbox`} type="checkbox" name="branchIds" value={branch.id} defaultChecked={selected.includes(branch.id)}/> {branch.name}</label>)}</div>
-  </fieldset>;
 }
 
 function StaffActions({ profile, prefix, managementAvailable }: { profile: StaffProfileRow; prefix: string; managementAvailable: boolean }) {

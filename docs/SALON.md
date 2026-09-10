@@ -1,5 +1,9 @@
 # Salon Vertical
 
+## Pilot smoke coverage
+
+The authenticated release smoke covers the Salon owner Dashboard, daily Appointments, Clients, Treatments, Staff, Inventory, and Billing on desktop and mobile. Salon Billing deliberately omits Automotive-only Job Order limits. This is route-level launch evidence and does not replace lifecycle, assignment, payment, or tenant-isolation tests.
+
 NegOSu Salon & Beauty is the customer-facing vertical name. Salon code continues to use the stable `salon` industry key and module terminology, while ServiceCore remains the internal shared-platform name.
 
 ## Public entry and onboarding
@@ -48,9 +52,19 @@ Appointments, Clients, Treatments, Resources, and Staff use compact desktop tabl
 
 ## Navigation and routing
 
-`organizations.industry` selects typed terminology and capability configuration. Ordinary authenticated organization updates cannot change that vertical identity; migration/service-role operations remain the trusted configuration path. The shared shell exposes Dashboard, Appointments, Clients, Treatments, Staff, Resources, Inventory, and Settings for Salon. Vehicles, Queue, Job Orders, Booking Requests, Maintenance, Estimates, Invoices, and the current Payments page are absent and protected by server-side capability guards. Organization membership, role, branch access, and RLS remain the security boundary; industry never replaces tenant authorization.
+`organizations.industry` selects typed terminology and capability configuration. Ordinary authenticated organization updates cannot change that vertical identity; migration/service-role operations remain the trusted configuration path. The shared shell exposes Dashboard, Appointments, Booking Requests, Clients, Treatments, Staff, Resources, Inventory, and Settings for Salon. Vehicles, Queue, Job Orders, Maintenance, Estimates, Invoices, and the current Payments page are absent and protected by server-side capability guards. Organization membership, role, branch access, and RLS remain the security boundary; industry never replaces tenant authorization.
 
-The existing Automotive Payments route remains gated because it is an invoice/Job Order directory. Salon records Core Appointment payments from appointment detail. Each rendered payment submission carries a stable idempotency key: exact retries return the original ledger row and conflicting key reuse is rejected. The existing public storefront remains vehicle-centric and disabled; appointment self-service is a separate narrow route, not a public booking storefront.
+The existing Automotive Payments route remains gated because it is an invoice/Job Order directory. Salon records Core Appointment payments from appointment detail. Each rendered payment submission carries a stable idempotency key: exact retries return the original ledger row and conflicting key reuse is rejected. Public booking uses the shared storefront and request workflow described below; appointment self-service remains a separate private link for an existing appointment.
+
+## Public page and appointment requests
+
+Owners and managers configure **Settings → Public page**: publish the business page, publish treatments, and enable online requests for branches with opening hours. **View public page** opens `/shop/[slug]`; `/shop/[slug]/book` shows the selected branch's available times in its timezone. Salon branding and treatment terminology replace vehicle-specific content, and clients submit contact details without a vehicle.
+
+A public submission creates a pending **Booking Request**, not a confirmed appointment. Authorized staff review it from **Booking Requests** and confirm or decline it. Confirmation creates the Core client/appointment/service records with no vehicle, using the existing authoritative price and duration triggers. Staff can then assign specialists and stations from the appointment. Customers use the private booking status link to check the result.
+
+The database derives industry from the published business and validates branch access, public treatment availability, opening hours, and the complete appointment duration. Availability remains conservative at branch level; pending requests do not reserve a slot, and confirmation rechecks availability under the branch scheduling lock. Existing Automotive vehicle requirements remain in place. Apply migration `0064` before enabling Salon public booking; pages remain unpublished until an operator publishes them.
+
+The published Salon page includes **View customer queue**, opening a separate window with branch selection and fullscreen. The customer queue requires no login and refreshes every 10 seconds. It shows only today's checked-in and in-service clients using abbreviated names; contact details, notes, payment information, and raw appointment identifiers are excluded. Apply `0065_public_salon_queue.sql` after the public-booking migration. Unpublished businesses and inactive branches have no anonymous queue access.
 
 ## Products and notifications
 

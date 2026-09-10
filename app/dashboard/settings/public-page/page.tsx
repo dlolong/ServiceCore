@@ -25,7 +25,7 @@ export default async function Page({
     createClient(),
   ]);
 
-  const [{ data: organization }, { data: branches }, { data: services }, { data: gallery }] =
+  const [{ data: organization, error: organizationError }, { data: branches, error: branchesError }, { data: services, error: servicesError }, { data: gallery, error: galleryError }] =
     await Promise.all([
       supabase
         .from("organizations")
@@ -35,6 +35,8 @@ export default async function Page({
       supabase
         .from("branches")
         .select("id,name,public_description,map_url,opening_hours,accepts_public_bookings")
+        .in("id", activeMembership.branches.map(branch => branch.id))
+        .eq("is_active", true)
         .eq("organization_id", activeMembership.organizationId)
         .order("name"),
       supabase
@@ -49,12 +51,24 @@ export default async function Page({
         .eq("organization_id", activeMembership.organizationId),
     ]);
 
+  if (organizationError || branchesError || servicesError || galleryError || !organization) {
+    return <main id="public-page-settings-page" className="mx-auto max-w-6xl">
+      <PageHeader id="public-page-settings-header" title="Website and booking" description="Manage your public page and online booking." />
+      <Card id="public-page-settings-load-error" className="mt-6 p-6" role="alert">
+        <h2 className="font-semibold">Unable to load public page settings</h2>
+        <p className="mt-2 text-sm text-admin-text-muted">Please try again before making changes.</p>
+        <Link id="public-page-settings-retry" href="/dashboard/settings/public-page" className="mt-4 inline-block font-semibold text-brand-primary-strong">Try again</Link>
+      </Card>
+    </main>;
+  }
+
   const publicPageAction = organization?.public_page_enabled ? (
     <Link
       id="public-page-view-link"
       className="font-semibold text-brand-primary-strong hover:underline"
       href={`/shop/${organization.slug}`}
       target="_blank"
+      rel="noopener noreferrer"
     >
       View public page ↗
     </Link>
@@ -70,10 +84,11 @@ export default async function Page({
         action={publicPageAction}
       />
       <FormMessage {...query} />
+      <p id="public-page-setup-help" className="mt-4 text-sm text-admin-text-muted">To receive online requests, publish this page, publish at least one {activeMembership.industry === "salon" ? "treatment" : "service"}, and enable online requests for a branch with opening hours. Review requests in <Link href="/dashboard/bookings" className="font-semibold text-brand-primary-strong">Booking Requests</Link>.</p>
 
       <div id="public-page-settings-grid" className="mt-6 grid gap-5 lg:grid-cols-2">
         <Card id="public-page-profile-card" className="p-5">
-          <h2 className="font-semibold text-admin-text">Shop page</h2>
+          <h2 className="font-semibold text-admin-text">{activeMembership.industry === "salon" ? "Salon page" : "Shop page"}</h2>
           <form id="public-page-profile-form" action={savePublicPage} className="mt-4 grid gap-4">
             <label className="flex min-h-11 items-center gap-2 text-sm font-medium text-admin-text">
               <input

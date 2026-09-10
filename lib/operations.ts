@@ -55,6 +55,14 @@ export const serviceSchema = z.object({
   description: optional(2000), shortDescription: optional(300), code: optional(50),
   durationMinutes: z.coerce.number().int().min(1).max(10080), basePrice: z.string(), isAddOn: z.boolean(), parentServiceId: z.union([z.literal(""), z.uuid()]).transform((value) => value || null),
 });
-export const walkInSchema = z.object({ branchId: z.uuid(), customerId: z.uuid(), vehicleId: z.uuid(), serviceIds: z.array(z.uuid()).min(1), notes: optional(1000) });
+export const walkInSchema = z.object({
+  branchId: z.uuid({ error: "Select an active branch." }),
+  customerId: z.uuid({ error: "Select an existing customer or create one." }),
+  vehicleId: z.uuid({ error: "Select an existing vehicle or create one." }),
+  serviceIds: z.array(z.uuid({ error: "Select valid services." })).min(1, { error: "Select at least one service." }),
+  notes: optional(1000),
+});
 
-export function selectedValues(data: FormData, key: string) { return data.getAll(key).filter((value): value is string => typeof value === "string"); }
+export function selectedValues(data: FormData, key: string) {
+  return data.getAll(key).filter((value): value is string => typeof value === "string" && value !== "");
+}

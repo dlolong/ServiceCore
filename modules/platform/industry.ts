@@ -82,7 +82,7 @@ export const salonConfig: IndustryConfig = {
     reservations: false,
     queue: false,
     maintenance: false,
-    booking_requests: false,
+    booking_requests: true,
     resources: true,
   },
 };

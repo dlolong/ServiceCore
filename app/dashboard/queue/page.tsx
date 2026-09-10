@@ -2,6 +2,7 @@ import Link from "next/link";
 import { startQueueJob } from "@/app/dashboard/job-actions";
 import { transitionQueue } from "@/app/dashboard/operations-actions";
 import { FormMessage } from "@/components/form-message";
+import { OpenQueueDisplay } from "@/components/open-queue-display";
 import { FilterBar, PageHeader } from "@/components/page-patterns";
 import { SubmitButton } from "@/components/submit-button";
 import { Button } from "@/components/ui/button";
@@ -33,7 +34,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ q
   const canWrite = ["owner", "manager", "advisor"].includes(activeMembership.role);
   const active = entries.filter(({ status }) => !["cancelled", "converted_to_job"].includes(status));
 
-  return <main id="queue-page" className="mx-auto min-w-0 max-w-6xl"><PageHeader id="queue-page-header" eyebrow={activeMembership.branchName} title="Today’s Queue" description={`${active.length} active vehicle${active.length === 1 ? "" : "s"}.`} action={canWrite?<Button asChild><Link id="queue-add-walk-in-button" href="/dashboard/queue/new">Add walk-in</Link></Button>:undefined}/><FormMessage message={params.message} error={params.error ?? (searchError || error ? "Unable to load the queue." : undefined)}/><FilterBar id="queue-filter-bar"><form id="queue-search-form" className="flex flex-col gap-2 min-[380px]:flex-row"><input id="queue-search-input" className="min-h-11 min-w-0 grow rounded-xl border bg-white px-3" name="q" defaultValue={params.q} placeholder="Queue number, customer, plate, or vehicle"/><Button id="queue-search-button" type="submit" variant="secondary">Search</Button></form></FilterBar><div id="queue-list" className="mt-4 grid gap-3 md:grid-cols-2">{entries.map((entry) => {
+  return <main id="queue-page" className="mx-auto min-w-0 max-w-6xl"><PageHeader id="queue-page-header" eyebrow={activeMembership.branchName} title="Today’s Queue" description={`${active.length} active vehicle${active.length === 1 ? "" : "s"}.`} action={<div className="flex flex-wrap gap-2"><OpenQueueDisplay branchId={activeMembership.branchId}/>{canWrite?<Button asChild><Link id="queue-add-walk-in-button" href="/dashboard/queue/new">Add walk-in</Link></Button>:null}</div>}/><FormMessage message={params.message} error={params.error ?? (searchError || error ? "Unable to load the queue." : undefined)}/><FilterBar id="queue-filter-bar"><form id="queue-search-form" className="flex flex-col gap-2 min-[380px]:flex-row"><input id="queue-search-input" className="min-h-11 min-w-0 grow rounded-xl border bg-white px-3" name="q" defaultValue={params.q} placeholder="Queue number, customer, plate, or vehicle"/><Button id="queue-search-button" type="submit" variant="secondary">Search</Button></form></FilterBar><div id="queue-list" className="mt-4 grid gap-3 md:grid-cols-2">{entries.map((entry) => {
     const customer = Array.isArray(entry.customers) ? entry.customers[0] : entry.customers;
     const vehicle = Array.isArray(entry.vehicles) ? entry.vehicles[0] : entry.vehicles;
     const appointment = Array.isArray(entry.appointments) ? entry.appointments[0] : entry.appointments;

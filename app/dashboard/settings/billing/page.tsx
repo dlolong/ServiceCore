@@ -6,6 +6,7 @@ import { getDashboardContext } from "@/lib/auth/context";
 import { formatMoney } from "@/lib/operations";
 import { createClient } from "@/lib/supabase/server";
 import { productBrand } from "@/modules/platform/brand";
+import { findLaunchPlan, planMatchesLaunchCatalog, visiblePlanFeatureLabels } from "@/modules/platform/plan-catalog";
 
 type EffectiveEntitlements = {
   planId: string;
@@ -36,7 +37,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ m
   ]);
   const effective = entitlementsResult.data as EffectiveEntitlements | null;
   const subscription = subscriptionResult.data;
-  const hasLoadError = Boolean(plansResult.error || subscriptionResult.error || entitlementsResult.error);
+  const hasCatalogMismatch = Boolean(plansResult.data?.some((plan) => !planMatchesLaunchCatalog(plan)));
+  const hasLoadError = Boolean(plansResult.error || subscriptionResult.error || entitlementsResult.error || hasCatalogMismatch);
 
   return (
     <main id="billing-page" className="mx-auto w-full max-w-6xl">
@@ -50,7 +52,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ m
       {hasLoadError ? (
         <Card id="billing-load-error" className="mt-5 p-6 text-center" role="alert">
           <h2 className="font-semibold">Could not load billing</h2>
-          <p className="mt-2 text-sm text-zinc-600">Try loading this page again. Your subscription was not changed.</p>
+          <p className="mt-2 text-sm text-zinc-600">Try loading this page again. Your subscription was not changed. If this continues, contact support.</p>
         </Card>
       ) : <>
         <Card id="billing-current-plan" className="mt-5 flex flex-wrap items-center justify-between gap-4 p-4 sm:p-5">
@@ -68,14 +70,16 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ m
           <div className="mt-3 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {plansResult.data?.map((plan) => {
               const current = effective?.planId === plan.id;
+              const catalogPlan = findLaunchPlan(plan.id);
               return <Card id={`billing-plan-${plan.id}`} className={`flex flex-col p-4 sm:p-5 ${current ? "border-brand-primary ring-2 ring-blue-100" : ""}`} key={plan.id}>
                 <div className="flex items-start justify-between gap-3">
                   <div><h3 className="text-lg font-semibold">{plan.name}</h3><p className="mt-1 text-2xl font-semibold">{plan.is_custom ? "Custom" : plan.monthly_price_centavos ? `${formatMoney(plan.monthly_price_centavos)}/mo` : "Free"}</p></div>
                   {current ? <span className="rounded-full bg-brand-tint px-2.5 py-1 text-xs font-medium text-brand-primary-strong">Current</span> : null}
                 </div>
+                {catalogPlan ? <p className="mt-2 text-sm leading-5 text-zinc-600">{catalogPlan.summary}</p> : null}
                 <details id={`billing-plan-details-${plan.id}`} className="mt-4 border-y border-zinc-100 py-3">
                   <summary className="cursor-pointer text-sm font-medium text-brand-primary-strong">View plan details</summary>
-                  <PlanDetails limits={plan.limits as Record<string, number>} features={plan.features as Record<string, boolean>} />
+                  <PlanDetails industry={activeMembership.industry} limits={plan.limits as Record<string, number>} features={plan.features as Record<string, boolean>} />
                 </details>
                 <div className="mt-auto pt-4">
                   {plan.is_custom ? <a id={`billing-contact-sales-${plan.id}`} className="font-medium text-brand-primary-strong hover:underline" href="mailto:sales@negosu.com">Contact sales</a>
@@ -97,6 +101,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ m
   );
 }
 
-function PlanDetails({ limits, features }: { limits: Record<string, number>; features: Record<string, boolean> }) {
-  return <ul className="mt-3 space-y-1.5 text-sm text-zinc-600"><li>{limits.branches < 0 ? "Unlimited" : limits.branches} branches</li><li>{limits.staff < 0 ? "Unlimited" : limits.staff} staff</li><li>{limits.monthly_jobs < 0 ? "Unlimited" : limits.monthly_jobs} jobs/month</li>{Object.entries(features).filter(([, enabled]) => enabled).map(([feature]) => <li key={feature}>✓ {feature.replaceAll("_", " ")}</li>)}</ul>;
+function PlanDetails({ industry, limits, features }: { industry: string; limits: Record<string, number>; features: Record<string, boolean> }) {
+  const featureLabels = visiblePlanFeatureLabels(industry, features);
+  return <ul className="mt-3 space-y-1.5 text-sm text-zinc-600"><li>{limits.branches < 0 ? "Unlimited" : limits.branches} branches</li><li>{limits.staff < 0 ? "Unlimited" : limits.staff} staff</li>{industry === "automotive" ? <li>{limits.monthly_jobs < 0 ? "Unlimited" : limits.monthly_jobs} Job Orders/month</li> : null}{featureLabels.map((feature) => <li key={feature}>✓ {feature}</li>)}</ul>;
 }

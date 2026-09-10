@@ -23,7 +23,7 @@ export async function saveSchedulingResource(data: FormData) {
   const supabase = await createClient();
   const values = { organization_id: activeMembership.organizationId, branch_id: parsed.data.branchId, name: parsed.data.name, resource_type: parsed.data.resourceType, capacity: parsed.data.capacity };
   const result = parsed.data.id ? await supabase.from("scheduling_resources").update(values).eq("id", parsed.data.id).eq("organization_id", activeMembership.organizationId) : await supabase.from("scheduling_resources").insert(values);
-  if (result.error) redirect(`/dashboard/settings/resources?error=${encodeURIComponent(result.error.message)}`);
+  if (result.error) redirect("/dashboard/settings/resources?error=Unable+to+save+this+resource.+Review+the+details+and+try+again.");
   revalidatePath("/dashboard/settings/resources");
   redirect("/dashboard/settings/resources?message=Service+bay+saved.");
 }
