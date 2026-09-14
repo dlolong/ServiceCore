@@ -110,7 +110,7 @@ test("public page settings use labelled controls and deterministic management ID
     "public-gallery-form",
     "public-gallery-add-button",
   ]) assert.match(publicPageSettings, new RegExp(id));
-  for (const label of ["Business description", "Logo image URL", "Opening-hours JSON", "Image description"]) {
+  for (const label of ["Business description", "Logo image URL", "Weekly booking hours", "Image description"]) {
     assert.match(publicPageSettings, new RegExp(label));
   }
   assert.match(publicPageSettings, /Only services marked Visible publicly appear in the Request Booking dropdown/);

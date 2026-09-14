@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireIndustryFeature } from "@/lib/auth/industry-access";
 import { firstError, formValue } from "@/lib/crm";
-import { branchPublicSchema, publicGallerySchema, publicPageSchema, publicServiceSchema } from "@/lib/public-booking";
+import { branchPublicSchema, publicGallerySchema, publicOpeningHoursFromFormData, publicPageSchema, publicServiceSchema } from "@/lib/public-booking";
 import { roleHasPermission } from "@/lib/rbac";
 import { createClient } from "@/lib/supabase/server";
 
@@ -30,7 +30,7 @@ export async function savePublicPage(data: FormData) {
 }
 export async function saveBranchPublic(data: FormData) {
   const membership = await settingsContext();
-  const parsed = branchPublicSchema.safeParse({ branchId: formValue(data, "branchId"), description: formValue(data, "description"), mapUrl: formValue(data, "mapUrl"), acceptsBookings: data.get("acceptsBookings") === "on", openingHours: formValue(data, "openingHours") });
+  const parsed = branchPublicSchema.safeParse({ branchId: formValue(data, "branchId"), description: formValue(data, "description"), mapUrl: formValue(data, "mapUrl"), acceptsBookings: data.get("acceptsBookings") === "on", openingHours: JSON.stringify(publicOpeningHoursFromFormData(data)) });
   if (!parsed.success) go("error", firstError(parsed.error));
   const supabase = await createClient();
   const { data: allowed, error: accessError } = await supabase.rpc("can_access_branch", { p_organization_id: membership.organizationId, p_branch_id: parsed.data.branchId });

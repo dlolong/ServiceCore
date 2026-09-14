@@ -9,6 +9,7 @@ import { isMissingOrganizationIndustry } from "@/lib/auth/database-compatibility
 import { resolveOnboardingDestination } from "@/lib/auth/onboarding";
 import { selectActiveMembership } from "@/lib/auth/onboarding-state";
 import { resolveIndustryConfig, type IndustryKey } from "@/modules/platform/industry";
+import { resolveDashboardTheme } from "@/modules/platform/dashboard-theme";
 
 export const ACTIVE_ORGANIZATION_COOKIE = "servicecore-active-organization";
 export const ACTIVE_BRANCH_COOKIE = "servicecore-active-branch";
@@ -113,7 +114,11 @@ export const getDashboardContext = cache(async function getDashboardContext() {
 
   return {
     user,
-    profile: { fullName: profile?.full_name ?? user.user_metadata.full_name ?? user.email ?? "NegOSu user", phone: profile?.phone ?? "" },
+    profile: {
+      fullName: profile?.full_name ?? user.user_metadata.full_name ?? user.email ?? "NegOSu user",
+      phone: profile?.phone ?? "",
+      dashboardTheme: resolveDashboardTheme(user.user_metadata.dashboard_theme),
+    },
     memberships,
     activeMembership,
   };

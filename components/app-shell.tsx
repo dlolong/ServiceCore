@@ -13,6 +13,7 @@ import type { OrganizationMembership } from "@/lib/auth/context";
 import { resolveIndustryConfig } from "@/modules/platform/industry";
 import { groupNavigation, navigationForIndustry, type NavigationGroup } from "@/modules/platform/navigation";
 import { resolveProductEntry } from "@/modules/platform/product-entry";
+import type { DashboardThemeId } from "@/modules/platform/dashboard-theme";
 
 const navigationIcons: Record<string, LucideIcon> = {
   dashboard: Gauge,
@@ -154,7 +155,7 @@ function MobileMoreMenu({ groups, activeHref }: { groups: NavigationGroup[]; act
   </DismissibleDetails>;
 }
 
-export function AppShell({ children, activeMembership, memberships, profileName }: { children: React.ReactNode; activeMembership: OrganizationMembership; memberships: OrganizationMembership[]; profileName: string }) {
+export function AppShell({ children, activeMembership, memberships, profileName, dashboardTheme }: { children: React.ReactNode; activeMembership: OrganizationMembership; memberships: OrganizationMembership[]; profileName: string; dashboardTheme: DashboardThemeId }) {
   const pathname = usePathname();
   const industryConfig = resolveIndustryConfig(activeMembership.industry);
   const productEntry = resolveProductEntry(activeMembership.industry);
@@ -172,8 +173,8 @@ export function AppShell({ children, activeMembership, memberships, profileName 
   const mobileColumnClasses = ["grid-cols-1", "grid-cols-2", "grid-cols-3", "grid-cols-4"] as const;
   const mobileColumnClass = mobileColumnClasses[Math.min(mobileNav.length, 3)];
   return (
-    <div id="dashboard-app-shell" className="flex h-dvh min-h-0 overflow-hidden bg-admin-canvas lg:grid lg:grid-cols-[224px_minmax(0,1fr)]">
-      <aside id="negosu-sidebar" className="hidden overflow-y-auto overscroll-y-contain border-r border-slate-800 bg-brand-ink text-white lg:block">
+    <div id="dashboard-app-shell" data-dashboard-theme={dashboardTheme} className="flex h-dvh min-h-0 overflow-hidden bg-admin-canvas lg:grid lg:grid-cols-[224px_minmax(0,1fr)]">
+      <aside id="negosu-sidebar" className="hidden overflow-y-auto overscroll-y-contain border-r border-white/10 bg-brand-ink text-white lg:block">
         <div className="px-3 py-4">
           <Link id="negosu-dashboard-home-link" href="/dashboard" className="inline-block" aria-label={`${productEntry.productName} dashboard`}><BrandWordmark inverse className="w-28" /></Link>
           <div className="mt-3 truncate text-sm font-medium text-white">{activeMembership.organizationName}</div>
@@ -216,7 +217,7 @@ export function AppShell({ children, activeMembership, memberships, profileName 
         </header>
         <main id="dashboard-main-content" className="admin-main-surface min-h-0 min-w-0 flex-1 touch-pan-y overflow-x-hidden overflow-y-auto overscroll-y-contain p-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] sm:p-5 sm:pb-24 lg:p-6 lg:pb-6">{children}</main>
       </div>
-      <nav id="dashboard-mobile-navigation" className={`fixed inset-x-0 bottom-0 z-30 grid ${mobileColumnClass} border-t border-admin-border bg-white/95 px-2 pb-[max(.5rem,env(safe-area-inset-bottom))] pt-2 shadow-ui-md backdrop-blur lg:hidden`}>
+      <nav id="dashboard-mobile-navigation" className={`fixed inset-x-0 bottom-0 z-30 grid ${mobileColumnClass} border-t border-admin-border bg-admin-surface/95 px-2 pb-[max(.5rem,env(safe-area-inset-bottom))] pt-2 shadow-ui-md backdrop-blur lg:hidden`}>
         {mobileNav.map((item) => {
           const Icon = navigationIcons[item.key] ?? Settings;
           const active = item.href === activeHref;

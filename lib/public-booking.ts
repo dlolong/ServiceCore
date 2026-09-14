@@ -2,7 +2,7 @@ import{z}from"zod";
 export type PublicBranch={id:string;name:string;timezone:string;description:string|null;phone:string|null;email:string|null;address:(string|null)[];mapUrl:string|null;hours:Record<string,{open?:string;close?:string;closed?:boolean}>;acceptsBookings:boolean};
 export type PublicService={id:string;name:string;description:string|null;durationMinutes:number;priceCentavos:number;category:string|null};
 export type PublicShop={industry:"automotive"|"salon";slug:string;name:string;description:string|null;logoUrl:string|null;coverUrl:string|null;phone:string|null;email:string|null;website:string|null;facebook:string|null;instagram:string|null;branches:PublicBranch[];services:PublicService[];gallery:{url:string;alt:string}[]};
-export const publicBookingSchema=z.object({slug:z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),branchId:z.uuid(),serviceIds:z.array(z.uuid()).min(1).max(10),preferredAt:z.iso.datetime({offset:true}),customerName:z.string().trim().min(2).max(120),phone:z.string().trim().min(7).max(30),email:z.union([z.literal(""),z.email().max(254)]),vehicleMake:z.string().trim().min(1).max(80),vehicleModel:z.string().trim().min(1).max(80),vehicleYear:z.union([z.literal(""),z.coerce.number().int().min(1900).max(new Date().getFullYear()+1)]),vehicleType:z.string().trim().max(80),plateNumber:z.string().trim().max(30),customerNote:z.string().trim().max(1000),website:z.string().max(0)});
+export const publicBookingSchema=z.object({slug:z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),branchId:z.uuid(),serviceIds:z.array(z.uuid()).min(1,"Select at least one service.").max(10,"Select no more than 10 services.").refine(ids=>new Set(ids).size===ids.length,"Select each service only once."),preferredAt:z.iso.datetime({offset:true}),customerName:z.string().trim().min(2).max(120),phone:z.string().trim().min(7).max(30),email:z.union([z.literal(""),z.email().max(254)]),vehicleMake:z.string().trim().min(1).max(80),vehicleModel:z.string().trim().min(1).max(80),vehicleYear:z.union([z.literal(""),z.coerce.number().int().min(1900).max(new Date().getFullYear()+1)]),vehicleType:z.string().trim().max(80),plateNumber:z.string().trim().max(30),customerNote:z.string().trim().max(1000),website:z.string().max(0)});
 
 // The caller must obtain this industry from get_public_shop, never from form input.
 export function publicBookingSchemaForIndustry(industry: PublicShop["industry"]) {
@@ -37,6 +37,17 @@ const openingDay = z.union([
   z.object({ closed: z.literal(false).optional(), open: clockTime, close: clockTime }).strict().refine(day => day.open < day.close, "Closing time must be after opening time."),
 ]);
 const openingHours = z.object({ monday: openingDay.optional(), tuesday: openingDay.optional(), wednesday: openingDay.optional(), thursday: openingDay.optional(), friday: openingDay.optional(), saturday: openingDay.optional(), sunday: openingDay.optional() }).strict();
+export const publicOpeningDayKeys = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"] as const;
+
+export function publicOpeningHoursFromFormData(data: FormData) {
+  return Object.fromEntries(publicOpeningDayKeys.map(day => {
+    const open = data.get(`hours-${day}-enabled`) === "on";
+    return [day, open ? {
+      open: String(data.get(`hours-${day}-open`) ?? ""),
+      close: String(data.get(`hours-${day}-close`) ?? ""),
+    } : { closed: true }];
+  }));
+}
 export const branchPublicSchema = z.object({
   branchId: z.uuid(), description: z.string().trim().max(1000), mapUrl: z.union([z.literal(""), httpUrl]), acceptsBookings: z.boolean(),
   openingHours: z.string().max(5000).transform((value, ctx) => {

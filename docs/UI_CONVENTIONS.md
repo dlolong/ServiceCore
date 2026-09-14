@@ -47,6 +47,12 @@ Semantic colors are reserved for meaning: emerald for success/available, amber f
 
 The implementation contract is documented in `docs/DESIGN_SYSTEM.md`. Shared components keep backwards-compatible props while centralizing new visual behavior.
 
+Users may choose one of the professional workspace palettes in Profile settings. Pages must continue consuming shared brand/admin tokens so the selection applies consistently; do not add theme-specific conditions to individual operational pages. Semantic status colors stay fixed, and public storefront branding is independent from the private workspace palette.
+
+Public Page settings show publishing readiness, public services, booking locations, friendly day-by-day hours, and gallery content as distinct sections. Billing shows the current subscription before plan comparison and never offers a checkout interval that lacks a configured provider price.
+
+Published storefronts use a compact business header, clear cover/identity area, service and location sections, responsive gallery, and persistent booking calls to action. The booking journey is date-first: visitors choose a location and one or more services (up to ten), then a month calendar shows only dates with enough continuous time for the combined duration, then time and customer details appear below. Unavailable dates are descriptive but non-interactive. Successful submission opens a private, responsive progress page with status text, schedule, services, and controlled automatic refresh. Public pages use one document scroll and retain the business's own logo and imagery independently from authenticated workspace themes.
+
 ## Lists, tables, and cards
 
 - Use compact tables from the `md` breakpoint when records share comparable fields.

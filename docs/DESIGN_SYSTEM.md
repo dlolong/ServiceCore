@@ -17,6 +17,12 @@ This is the implementation contract for shared NegOSu product UI. It applies to 
 
 Tokens live in `app/globals.css`. Prefer named Tailwind theme tokens such as `admin-surface`, `admin-text`, `brand-primary`, and `status-danger` instead of page-specific hex colors.
 
+### User-selected workspace themes
+
+Authenticated users may select Ocean Blue, Graphite, Emerald, or Indigo from Profile settings. The preference is stored in the authenticated user metadata and is applied only inside `dashboard-app-shell`; it follows the user when switching organizations. Each palette changes structural chrome, interactive accents, borders, and the canvas through the same shared tokens. It does not change customer-facing public-page branding or semantic success, warning, danger, and information colors.
+
+Unknown or older preference values resolve to Ocean Blue. Server actions allowlist every saved theme value; theme metadata is a presentation preference and is never an authorization input.
+
 ## Typography and spacing
 
 Authenticated page titles are compact: 24px on mobile and no more than 30px at normal desktop widths. Use semibold for titles and important actions, medium for labels, and regular body text. Typical page and section gaps are 12–20px; ordinary cards use 12–20px padding.
